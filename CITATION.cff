@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+message: >-
+  If you use this research repository or its computational materials,
+  please cite the repository. A permanent publication citation may be
+  added after the associated manuscript or archival release is issued.
+title: >-
+  Cardiovascular Machine Learning Research:
+  BRFSS-Based Classification of Prevalent Self-Reported
+  Myocardial Infarction and Coronary Heart Disease with
+  Temporal Validation
+type: software
+authors:
+  - family-names: Bhandari
+    given-names: Keshav
+repository-code: https://github.com/imksav/cardiovascular-ml-research
+url: https://github.com/imksav/cardiovascular-ml-research
+license: MIT
+keywords:
+  - BRFSS
+  - cardiovascular machine learning
+  - myocardial infarction
+  - coronary heart disease
+  - temporal validation
+  - cross-sectional classification
+  - reproducible research
+  - calibration
+abstract: >-
+  Reproducible classification of prevalent self-reported myocardial
+  infarction and/or coronary heart disease using BRFSS 2023, including
+  held-out testing and frozen-pipeline evaluation on BRFSS 2025.
+  Computational materials cover model comparison, calibration,
+  survey-weighted evaluation point estimates, permutation feature
+  importance and robustness analysis. This is not prospective event
+  prediction or clinical validation.

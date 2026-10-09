@@ -1,0 +1,62 @@
+{
+  "study": {
+    "analysis_type": "Cross-sectional classification with later survey-year temporal evaluation",
+    "outcome": "Prevalent self-reported myocardial infarction and/or coronary heart disease",
+    "brfss_target_variable": "_MICHD",
+    "development_year": 2023,
+    "temporal_validation_year": 2025
+  },
+  "predictors": [
+    "AGE_GROUP",
+    "PHYSICAL_ACTIVITY",
+    "SMOKING_STATUS",
+    "BLOOD_PRESSURE",
+    "DIABETES_STATUS",
+    "BMI"
+  ],
+  "primary_model": {
+    "algorithm": "GradientBoostingClassifier",
+    "n_estimators": 150,
+    "learning_rate": 0.1,
+    "max_depth": 3,
+    "locked_threshold": 0.15291280960965983,
+    "threshold_rule": "Maximum validation F1"
+  },
+  "secondary_model": {
+    "algorithm": "L2 Logistic Regression"
+  },
+  "internal_test": {
+    "n": 64311,
+    "roc_auc": 0.8011506219734624,
+    "average_precision": 0.24486458384450444,
+    "brier_score": 0.06968933420070271
+  },
+  "temporal_evaluation": {
+    "n": 352145,
+    "roc_auc": 0.794858981303888,
+    "average_precision": 0.24877469339941605,
+    "brier_score": 0.07381511906055838
+  },
+  "saved_models": {
+    "primary": "C:\\Users\\imksa\\Desktop\\Research Works\\cardiovascular-ml-research\\artifacts\\models\\brfss_2023_gradient_boosting_locked.joblib",
+    "secondary": "C:\\Users\\imksa\\Desktop\\Research Works\\cardiovascular-ml-research\\artifacts\\models\\brfss_2023_logistic_regression_locked.joblib"
+  },
+  "interpretation_boundary": {
+    "prospective_prediction": false,
+    "clinical_diagnostic_model": false,
+    "causal_model": false,
+    "survey_weight_as_predictor": false
+  },
+  "software_versions": {
+    "python": "3.14.6 (tags/v3.14.6:c63aec6, Jun 10 2026, 10:26:10) [MSC v.1944 64 bit (AMD64)]",
+    "python_executable": "c:\\Users\\imksa\\Desktop\\Research Works\\cardiovascular-ml-research\\.venv\\Scripts\\python.exe",
+    "operating_system": "Windows-11-10.0.26200-SP0",
+    "numpy": "2.5.3",
+    "pandas": "3.0.6",
+    "scipy": "1.18.1",
+    "scikit_learn": "1.9.1",
+    "statsmodels": "0.15.0",
+    "matplotlib": "3.11.2",
+    "joblib": "1.6.0"
+  }
+}

@@ -1,0 +1,16 @@
+# Direct research dependencies for the BRFSS analytical notebook.
+# Versions below were retained where supplied in the previous environment file.
+# Before an archival release, reconcile unpinned packages with
+# artifacts/provenance/software_versions.json from the executed environment.
+
+numpy==2.5.3
+pandas==3.0.6
+scipy
+scikit-learn
+statsmodels==0.15.0
+matplotlib==3.11.2
+joblib
+ipykernel
+notebook
+tensions==4.16.0
+wcwidth==0.8.3

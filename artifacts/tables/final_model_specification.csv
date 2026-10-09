@@ -1,0 +1,13 @@
+component,value
+Primary algorithm,Gradient Boosting
+Training survey year,BRFSS 2023
+Temporal validation year,BRFSS 2025
+Number of predictors,6
+Predictors,Age group; Physical activity; Smoking status; Blood pressure; Diabetes status; BMI
+n_estimators,150
+learning_rate,0.1
+max_depth,3
+Threshold rule,Maximum validation F1
+Locked threshold,0.152913
+Secondary benchmark,L2 Logistic Regression
+Survey weight used as predictor,False

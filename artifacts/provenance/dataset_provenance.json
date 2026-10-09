@@ -1,0 +1,18 @@
+[
+  {
+    "survey_year": 2023,
+    "filename": "LLCP2023.XPT",
+    "resolved_path": "C:\\Users\\imksa\\Desktop\\Research Works\\cardiovascular-ml-research\\data\\raw\\brfss\\2023\\LLCP2023.XPT",
+    "file_size_bytes": 1205554400,
+    "sha256": "3d3bf8ef5195bde227828ddc4c90745b76e8b304f8f5b9a043b6d99895fd1615",
+    "provenance_recorded_utc": "2026-10-09T02:05:14.819980+00:00"
+  },
+  {
+    "survey_year": 2025,
+    "filename": "LLCP2025.XPT",
+    "resolved_path": "C:\\Users\\imksa\\Desktop\\Research Works\\cardiovascular-ml-research\\data\\raw\\brfss\\2025\\LLCP2025.XPT",
+    "file_size_bytes": 799971280,
+    "sha256": "d99262f8854f018a600c3538ee78e4308569af700abe6b92b36180336c24dec2",
+    "provenance_recorded_utc": "2026-10-09T02:05:19.142839+00:00"
+  }
+]

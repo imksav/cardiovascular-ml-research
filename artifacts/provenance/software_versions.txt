@@ -1,0 +1,10 @@
+python: 3.14.6 (tags/v3.14.6:c63aec6, Jun 10 2026, 10:26:10) [MSC v.1944 64 bit (AMD64)]
+python_executable: c:\Users\imksa\Desktop\Research Works\cardiovascular-ml-research\.venv\Scripts\python.exe
+operating_system: Windows-11-10.0.26200-SP0
+numpy: 2.5.3
+pandas: 3.0.6
+scipy: 1.18.1
+scikit_learn: 1.9.1
+statsmodels: 0.15.0
+matplotlib: 3.11.2
+joblib: 1.6.0
