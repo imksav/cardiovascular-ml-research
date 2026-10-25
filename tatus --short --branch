@@ -1,0 +1,18 @@
+warning: in the working copy of 'CHANGELOG.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/PHASE2_RESEARCH_POSITIONING.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/PROJECT_STATUS.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'literature/literature_matrix.csv', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'literature/search_strategy.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'literature/verified_seed_sources.csv', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'research_log.md', LF will be replaced by CRLF the next time Git touches it
+ CHANGELOG.md                          |  26 [32m+++++[m[31m--[m
+ README.md                             |   7 [32m+[m[31m-[m
+ docs/PHASE2_RESEARCH_POSITIONING.md   |  92 [32m+++++++++++++++[m[31m----------[m
+ docs/PROJECT_STATUS.md                |  57 [32m++++++++[m[31m--------[m
+ literature/literature_matrix.csv      |  17 [32m+++++[m
+ literature/screening_log_template.csv |   1 [31m-[m
+ literature/search_strategy.md         | 124 [32m+++++++++++++++++++++[m[31m-------------[m
+ literature/verified_seed_sources.csv  |  19 [32m++++[m[31m--[m
+ research_log.md                       |  78 [32m++++++++++++++++++++[m[31m-[m
+ 9 files changed, 295 insertions(+), 126 deletions(-)
