@@ -2,7 +2,7 @@
 
 **Research title:** Cardiovascular Machine Learning Research: BRFSS-Based Classification of Prevalent Self-Reported Myocardial Infarction and Coronary Heart Disease with Temporal Validation
 
-**Current milestone:** Phase 1 — Completed Experimental Analysis.
+**Current milestone:** Phase 2 completed — targeted critical narrative/scoping review and research positioning (25 October 2026). Phase 3 manuscript development is next.
 
 **Release version:** `v0.1.0`
 
@@ -10,7 +10,7 @@
 
 **Release status:** Published as a GitHub pre-release.
 
-**Current research stage:** Transitioning from completed computational analysis to Phase 2 — Literature Review and Research Positioning.
+**Current research stage:** Phase 1 remains locked and complete; Phase 2 is complete for the stated non-systematic review scope. Noh et al. (2026) is the closest direct comparator; annual-sample temporal validation has precedent for another BRFSS outcome. No “first study” claim is supported.
 
 **GitHub Release:** [v0.1.0 — Phase 1: Completed Experimental Analysis](https://github.com/imksav/cardiovascular-ml-research/releases/tag/v0.1.0)
 
@@ -114,38 +114,41 @@ The released `v0.1.0` tag preserves the computational baseline for subsequent re
 
 ---
 
-## 3. Next: Phase 2 — Literature Review and Research Positioning
+## 3. Completed: Phase 2 — Literature Review and Research Positioning
 
-**Status:** Not started.
+**Status:** Completed on 25 October 2026 as a targeted critical narrative/scoping review. This is not an exhaustive systematic review.
 
-**Planned working branch:** `phase/02-literature-review`
+**Working branch:** `phase/02-literature-review` (as supplied by the project owner; this ZIP snapshot does not include `.git` metadata).
 
 **Objective:** Establish a verified scientific literature foundation, identify relevant research gaps, and develop a defensible positioning of the completed BRFSS analysis.
 
-### Planned Tasks
+### Completed deliverables
 
-- [ ] Create the Phase 2 working branch.
-- [ ] Review the existing literature matrix and search-strategy documents.
-- [ ] Define and document the literature search strategy.
-- [ ] Search relevant academic databases and scholarly sources.
-- [ ] Verify publication details, DOIs and research findings.
-- [ ] Establish transparent inclusion and exclusion criteria.
-- [ ] Compare related cardiovascular machine-learning studies.
-- [ ] Examine literature on temporal validation, model calibration and generalisability.
-- [ ] Assess evidence concerning survey-weighted evaluation and subgroup performance.
-- [ ] Identify research gaps supported by verified literature.
-- [ ] Refine manuscript research questions where scientifically justified.
-- [ ] Prepare a critical literature synthesis.
-- [ ] Update the research log and project documentation.
-- [ ] Review and merge completed Phase 2 contributions into `main`.
+- [x] Review the existing literature files and preserve their established paths.
+- [x] Populate `literature/literature_matrix.csv` with 16 core evidence records.
+- [x] Add `literature/screening_log.csv`; retain `screening_log_template.csv` as a blank template.
+- [x] Update `literature/search_strategy.md` with exploratory queries, accessed source types, access limitations and explicit non-systematic-review status.
+- [x] Verify the closest direct comparator, Noh et al. (2026), using BRFSS 2023 and prevalent self-reported MI/CHD.
+- [x] Identify Kung et al. (2026) as a temporal-validation analogue for a different cross-sectional outcome.
+- [x] Update `docs/PHASE2_RESEARCH_POSITIONING.md`, `docs/PHASE2_FINAL_REPORT.md`, `README.md`, `CHANGELOG.md` and this research log without changing locked Phase 1 results.
+- [x] Produce `literature/related_work_synthesis.md` and `literature/references.bib`.
+- [x] Deduplicate the seed source list and update source-level verification notes.
+- [x] Complete a provisional domain-level PROBAST+AI appraisal and a 52-subitem TRIPOD+AI pre-manuscript audit.
+- [x] Identify and preserve unresolved source-version and survey-inference limitations.
 
-### Research Integrity
+### Scope boundary (not a hidden unfinished task)
 
-The completed Phase 1 experimental specification is preserved.
+- The review is **not systematic**: direct Scopus/Web of Science/Embase/IEEE subscription exports, complete result counts, dual independent screening and a PRISMA flow were not performed.
+- Some sources were available only through abstracts/indexed publisher results. Those limitations are marked in the matrix and screening log.
+- The CDC source-file/column-count discrepancy and author-confirmation items in the TRIPOD+AI audit are carried into Phase 3/reproducibility review; they do not justify silently altering Phase 1 results.
 
-Literature findings may lead to refinements in manuscript framing, interpretation or research-question wording.
+### Final research-positioning decision
 
-Any substantive change to the locked predictors, model, outcome, preprocessing or experimental results must be clearly documented as a new analysis or research extension.
+No “first study” claim is supported. The candidate contribution is the exact locked six-predictor prevalent MI/CHD application and combined evaluation package, subject to broader searching. The closest comparator means BRFSS 2023 `_MICHD` classification and leakage awareness are not unique; a separate BRFSS 2023-to-2024 diabetes study means annual-sample temporal validation is not novel in itself.
+
+### Research integrity
+
+The completed Phase 1 experimental specification is preserved. Literature findings may refine manuscript framing and interpretation. Any substantive change to the locked predictors, model, outcome, preprocessing or experimental results must be documented as a new analysis or research extension.
 
 ---
 
@@ -154,7 +157,7 @@ Any substantive change to the locked predictors, model, outcome, preprocessing o
 | Phase | Scope | Status |
 |---|---|---|
 | Phase 1 | Computational research implementation and validation | Completed |
-| Phase 2 | Literature review and research positioning | Next |
+| Phase 2 | Literature review and research positioning | Completed (targeted narrative/scoping review; not systematic) |
 | Phase 3 | Scientific manuscript development | Not started |
 | Phase 4 | Scientific and reproducibility review | Not started |
 | Phase 5 | Journal selection, submission and publication preparation | Not started |
@@ -231,6 +234,6 @@ These limitations will remain explicit throughout manuscript preparation and pub
 
 ---
 
-**Last updated:** 9 October 2026
+**Last updated:** 25 October 2026
 
-**Current status:** Phase 1 completed and released as `v0.1.0`; Phase 2 literature review is the next research milestone.
+**Current status:** Phase 1 completed and released as `v0.1.0`; Phase 2 completed for the stated targeted-review scope; Phase 3 manuscript development is next.

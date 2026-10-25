@@ -5,10 +5,28 @@ This file documents **completed, meaningful changes** to the research repository
 
 ## [Unreleased]
 
-### Planned
-- Verify literature references and document the search strategy in Phase 2.
-- Refine manuscript research questions and identify relevant research gaps.
-- Prepare and review the scientific manuscript in later phases.
+### Phase 2 close-out — 2026-10-25
+- Completed the targeted critical narrative/scoping review and finalized the research-positioning decision; no “first study” claim is made.
+- Added `literature/related_work_synthesis.md`, `literature/references.bib`, `literature/probast_ai_appraisal.csv`, and `literature/tripod_ai_reporting_audit.csv`.
+- Deduplicated `literature/verified_seed_sources.csv`; expanded source-level notes for the BRFSS 2022 studies and the annual-BRFSS temporal-validation analogue.
+- Added `docs/PHASE2_FINAL_REPORT.md` and updated project status/readme/research log for Phase 3 handoff.
+- Preserved Phase 1 model artifacts, tables and figures unchanged.
+
+### Added
+- Populated `literature/literature_matrix.csv` with a 16-record first-pass evidence set covering direct/related BRFSS classifiers, annual-sample temporal validation, cross-survey validation, calibration, survey-aware ML, reporting guidance and official CDC documentation.
+- Added `literature/screening_log.csv` for source-level screening decisions while preserving `literature/screening_log_template.csv` as a blank reusable template.
+- Updated `literature/search_strategy.md` with the exploratory queries actually run, source-access limits and the explicit status that this is not an exhaustive systematic review.
+- Updated `docs/PHASE2_RESEARCH_POSITIONING.md`, `docs/PROJECT_STATUS.md` and `research_log.md` with the direct comparator, temporal-validation analogue, provisional contribution and unresolved source-version discrepancy.
+
+### Research positioning
+- Confirmed Noh et al. (2026) as a close BRFSS 2023 prevalent self-reported MI/CHD comparator; broad novelty claims are not supported.
+- Identified additional BRFSS 2022 CHD/MI classification studies and a BRFSS 2023-to-2024 diabetes temporal-validation analogue.
+- Flagged unresolved sample/metric inconsistencies in one related study and a possible SMOTE/split-ordering concern in another for verification; neither is treated as a confirmed methodological error.
+
+### Remaining
+- If exhaustive coverage is required for a target journal, run a separately protocolled database review with full database exports, result counts and independent screening.
+- Resolve the CDC source-file fingerprint/column-count discrepancy before any justified rerun.
+- Draft the scientific manuscript in Phase 3 and complete author confirmations listed in the TRIPOD+AI audit.
 
 ## [0.1.0] — 2026-10-09
 

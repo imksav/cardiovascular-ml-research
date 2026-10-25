@@ -1,7 +1,7 @@
 # Cardiovascular Machine Learning Research: BRFSS-Based Classification of Prevalent Self-Reported Myocardial Infarction and Coronary Heart Disease with Temporal Validation
 
 **Research code and results · BRFSS 2023 development → BRFSS 2025 temporal evaluation**  
-**Status:** Experimental analysis completed; documentation, reproducibility checks and manuscript preparation remain in progress. **No formal `v1.0.0` release or publication DOI has been issued.**
+**Status:** Phase 1 experimental baseline completed and released as `v0.1.0`; Phase 2 targeted critical literature review and research positioning completed (not a systematic review). Phase 3 manuscript development is next. **No formal `v1.0.0` release or publication DOI has been issued.**
 
 A reproducible Python study of **prevalent self-reported myocardial infarction (MI) and/or coronary heart disease (CHD)** in the U.S. Behavioral Risk Factor Surveillance System (BRFSS). The study compares classifiers, evaluates a 2023 held-out test set, and applies a **frozen 2023 model** to a separately collected BRFSS 2025 sample.
 
@@ -86,6 +86,7 @@ The image paths above assume the exported files are present in the repository-ro
 |---|---|
 | [`notebooks/03_brfss_2023_first_look_optimised.ipynb`](notebooks/03_brfss_2023_first_look_optimised.ipynb) | Main executed experimental notebook / scientific source of truth |
 | [`reports/03_brfss_2023_first_look_optimised.html`](reports/03_brfss_2023_first_look_optimised.html) | Static notebook export (refresh after final notebook review) |
+| [`reports/PHASE2_FINAL_REPORT.pdf`](reports/PHASE2_FINAL_REPORT.pdf) | Four-page Phase 2 close-out summary and Phase 3 handoff |
 | [`docs/research_protocol.md`](docs/research_protocol.md) | Implemented analysis and evaluation rules |
 | [`docs/research_questions.md`](docs/research_questions.md) | Study questions and interpretation limits |
 | [`docs/data_dictionary.md`](docs/data_dictionary.md) | Locked features, variable coding and survey metadata |
@@ -94,7 +95,7 @@ The image paths above assume the exported files are present in the repository-ro
 | `artifacts/figures/` | Generated research figures |
 | `artifacts/models/` | Saved fitted pipelines (`joblib`) |
 | `artifacts/provenance/` | Source fingerprints, environment and reproducibility manifest |
-| `literature/` | Literature-review working files (review separately for source validity) |
+| `literature/` | Phase 2 evidence matrix, screening log, related-work synthesis, BibTeX references, PROBAST+AI appraisal and TRIPOD+AI audit |
 | `paper/` | Manuscript work (not yet submitted/published) |
 
 The historical [`research_log.md`](research_log.md) records the transition from early planning to the locked experimental workflow.
@@ -136,7 +137,7 @@ BRFSS is cross-sectional and primarily self-reported. Pre-existing MI/CHD may pr
 
 ## Citation and Licence
 
-The citation metadata are in [`CITATION.cff`](CITATION.cff). The repository is a **development-stage research release**, and no formal semantic-version tag or permanent DOI is claimed. When citing, use the full title above, **Keshav Bhandari**, and the [repository URL](https://github.com/imksav/cardiovascular-ml-research).
+The citation metadata are in [`CITATION.cff`](CITATION.cff). The repository is a **development-stage research release**, and no formal `v1.0.0` tag or publication DOI is claimed. The Phase 2 review is a targeted narrative/scoping review, not a systematic review. When citing, use the full title above, **Keshav Bhandari**, and the [repository URL](https://github.com/imksav/cardiovascular-ml-research).
 
 Original project code and associated materials are covered by the [MIT License](LICENSE). The underlying CDC BRFSS datasets are **not included or relicensed** by this repository; obtain them from official CDC sources.
 

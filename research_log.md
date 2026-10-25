@@ -1,5 +1,9 @@
 # Research Log
 
+## Current Status — 25 October 2026
+
+Phase 1 is complete and preserved under `v0.1.0`. Phase 2 is complete as a targeted critical narrative/scoping review; the final report and evidence artifacts are in `docs/PHASE2_FINAL_REPORT.md` and `literature/`. Phase 3 manuscript development is the next phase. The review is not systematic, and no exhaustive-search or “first study” claim is made.
+
 ## Project
 
 Cardiovascular Machine Learning Research: BRFSS-Based Classification of Prevalent Self-Reported Myocardial Infarction and Coronary Heart Disease with Temporal Validation
@@ -31,6 +35,44 @@ Cardiovascular Machine Learning Research: BRFSS-Based Classification of Prevalen
 - [ ] Decide separately when to create a GitHub Release, `v1.0.0` and an archive DOI.
 
 > **Archival note:** The dated entries below retain the *historical planning status at that time*. Statements such as “not yet finalised” belong to those earlier stages and do not describe the project's status on 9 October 2026.
+
+
+
+## Phase 2 Literature Review — First Evidence Pass (25 October 2026)
+
+**Status:** First-pass exploratory retrieval and evidence matrix completed; review remains non-systematic and incomplete.
+
+### Actions completed
+
+- Reviewed the existing branch snapshot and retained the existing file structure and Phase 1 model/results.
+- Populated `literature/literature_matrix.csv` with 15 evidence records spanning direct and related BRFSS studies, temporal/external validation, calibration/performance methodology, survey-aware ML, reporting/appraisal guidance, and official CDC documentation.
+- Added `literature/screening_log.csv`; retained `literature/screening_log_template.csv` as a blank reusable template.
+- Updated `literature/search_strategy.md` with actual exploratory queries, search date, source-access limits and explicit warnings that result counts and PRISMA flow are not available.
+- Updated `docs/PHASE2_RESEARCH_POSITIONING.md` to reflect the closest comparator and narrower provisional contribution.
+
+### Main evidence findings
+
+1. **Noh et al. (2026), DOI 10.1186/s12889-026-27570-3, is a direct comparator.** It uses BRFSS 2023 and the prevalent self-reported MI/CHD target, evaluates post-diagnosis proxy exclusions, reports held-out performance and calibration, and includes weighted logistic-regression sensitivity analyses. Therefore, BRFSS 2023 `_MICHD` classification and leakage awareness are not unique claims.
+2. **Kung et al. (2026), DOI 10.7150/ijms.137605, is a temporal-validation analogue.** It applies a BRFSS 2023 cross-sectional diabetes classifier to BRFSS 2024 without refitting. Temporal validation across annual BRFSS samples is not novel in itself, though the outcome differs.
+3. **Wu et al. (2026), DOI 10.1016/j.cmpb.2025.109186, reports BRFSS internal and NHANES external validation** for a CHD model; exact target coding and survey methods require full-text extraction.
+4. **Wanyonyi et al. (2025), DOI 10.1371/journal.pone.0328338, use a BRFSS 2015-derived secondary dataset** and report SMOTE, a 70/15/15 split and a stacking AUC of 0.94. The narrative ordering may place SMOTE before partitioning; code/supplement must be checked before concluding whether leakage occurred.
+5. **Chavda and Hyun (2024), DOI 10.59720/24-006, report BRFSS 2022 self-reported CHD/MI history classification** with five-fold cross-validation (MCC 0.299–0.313 for primary models). This further rules out generic claims that BRFSS-based prevalent CHD/MI classification is new.
+6. **Imani et al. (2026), DOI 10.1016/j.ahjo.2026.100719, use BRFSS 2022 and a combined self-reported CHD/MI outcome** with 13 predictors. The abstract/table accuracy values and a reported sample-count total conflict; the figures must be reconciled before any numeric comparison.
+7. Survey-aware ML guidance by Oh et al. (2026) reinforces the distinction between weighted metric point estimates and full design-aware population inference. The existing study must continue to describe its weighted metrics as sensitivity-analysis point estimates only.
+8. Official CDC pages currently report 345 variables for the 2023 XPT and 284 for the 2025 XPT, while local provenance records 350 and 283 observed columns, respectively. Local file hashes are recorded in `artifacts/provenance/dataset_provenance.json`; the source-version discrepancies remain unresolved and no Phase 1 rerun was performed.
+
+### Current interpretation
+
+The defensible provisional contribution is a description of the exact locked six-predictor prevalent MI/CHD classifier, its untouched 2023 test evaluation, unchanged application to the independent 2025 BRFSS sample, and joint reporting of calibration, weighted point-estimate sensitivity, subgroup/missingness and threshold robustness. This is **not yet a novelty claim**; the database-specific search and full-text screening remain incomplete.
+
+### Next tasks
+
+- [ ] Extract full methods/results for uncertain BRFSS/CHD studies and confirm outcome coding, sample restrictions, thresholds, calibration and survey handling.
+- [ ] Run direct PubMed/MEDLINE and available Scopus/Web of Science/IEEE Xplore searches; save full queries, filters, exports and exclusion reasons.
+- [ ] Deduplicate records and finish title/abstract and full-text screening.
+- [ ] Apply relevant TRIPOD+AI reporting items and a proportionate PROBAST+AI appraisal before drafting the manuscript.
+- [ ] Preserve Phase 1 model outputs and treat any new design-based inferential analysis as separate work.
+
 
 ---
 
@@ -345,3 +387,37 @@ skip logic.
 
 Therefore, understanding the codebook is necessary before data
 cleaning or modelling.
+
+
+## Phase 2 Close-out — 25 October 2026
+
+**Status:** Completed for the defined scope as a targeted critical narrative/scoping review. This is not a systematic review; no exhaustive database exports, complete search-result counts, dual independent screening or PRISMA flow are claimed.
+
+### Final deliverables
+
+- `literature/literature_matrix.csv`: 16 core evidence records.
+- `literature/screening_log.csv`: source-level decisions and access limitations.
+- `literature/verified_seed_sources.csv`: deduplicated source list.
+- `literature/related_work_synthesis.md`: critical synthesis and cautious contribution statement.
+- `literature/references.bib`: BibTeX references for manuscript writing.
+- `literature/probast_ai_appraisal.csv`: provisional, single-reviewer domain-level appraisal; not a formal independent rating.
+- `literature/tripod_ai_reporting_audit.csv`: 52-subitem pre-manuscript reporting audit.
+- `docs/PHASE2_FINAL_REPORT.md`: close-out report, limitations and Phase 3 handoff.
+
+### Final research decision
+
+The closest direct comparator is Noh et al. (2026), which uses BRFSS 2023 and prevalent self-reported MI/CHD. Chavda and Hyun (2024) and Imani et al. (2026) provide additional BRFSS-based CHD/MI classification studies. Kung et al. (2026) demonstrates annual-BRFSS temporal validation for a different outcome. The project will not claim to be the first to use BRFSS, ML classification, leakage controls, calibration or annual-sample temporal validation.
+
+The defensible contribution statement is a description of the locked six-predictor model, 2023 held-out evaluation, unchanged 2025 annual-sample application, and joint reporting of discrimination, calibration, fixed-threshold metrics, survey-weighted point-estimate sensitivity, and selected robustness analyses.
+
+### Limitations retained for Phase 3
+
+- The current CDC annual pages describe file dimensions that differ from the local file fingerprints/observed columns recorded in Phase 1 provenance; no source data or results were silently changed.
+- Survey-weighted performance values remain point estimates without full complex-design uncertainty intervals.
+- BRFSS 2025 is a separate annual sample, not longitudinal follow-up or independent clinical validation.
+- Imani et al. contains unresolved sample-count and accuracy inconsistencies. Wanyonyi et al. has a possible SMOTE/split-order concern based on methods text; neither issue is described as confirmed without code/author verification.
+- TRIPOD+AI items concerning ethics/IRB, funding, conflicts, registration and patient/public involvement require author confirmation during manuscript drafting.
+
+### Next phase
+
+Proceed to Phase 3 manuscript development. Draft Methods and Results from the locked protocol/notebook/tables first; then Introduction and Discussion from the related-work synthesis. Do not change the locked Phase 1 analysis silently. Commit and push the final Phase 2 checkpoint before creating the Phase 3 branch if preserving the branch history is desired.
