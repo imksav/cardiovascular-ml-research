@@ -1,0 +1,921 @@
+(function (window, document) {
+  "use strict";
+
+  // During build this variable gets set to "true" IF we are on a dev environment, otherwise it is set to "false" for production.
+  const isDev = 'false' === 'true'; // true or false
+  // Used for logging useful info
+  var isDebug = String(window.location?.search||'').includes('cdcdebug');
+
+  const skipSurvey = new URLSearchParams(window.location.search).get("survey") === 'false' || new URLSearchParams(window.location.search).get("survey") === 'n';
+  if (skipSurvey) {
+    if (isDebug) console.log("[Redcap Survey]", "[Flow]", "Initialization skipped via URL parameter.");
+    return;
+  }
+
+  // __RedcapSurveyBundleInit is set synchronously on first entry so a second
+  // script tag executing in the same tick also sees the guard and bails out.
+  // If a stale bundle object exists without the expected API, allow reinit.
+  if (window.__RedcapSurveyBundleInit) {
+    if (isDebug) console.log("[Redcap Survey]", "[Flow]", "Bundle already loading/loaded; skipping duplicate initialization.");
+    return;
+  }
+
+  if (
+    window.RedcapSurveyBundle &&
+    typeof window.RedcapSurveyBundle.mount === "function" &&
+    typeof window.RedcapSurveyBundle.clearSession === "function"
+  ) {
+    if (isDebug) console.log("[Redcap Survey]", "[Flow]", "Bundle already loaded with expected API; skipping duplicate initialization.");
+    return;
+  }
+  window.__RedcapSurveyBundleInit = true;
+
+  var lastMountResult = null;
+  var DEFAULT_CONFIG = {
+    idPrefix: "redcap-survey",
+    iframeSrc: "https://airc.cdc.gov/surveys/?s=HK7WPFJ4EJNRKTJ4",
+    surveyId: "1298",
+    pageThreshold: 3,
+    sampleRate: 100, //100 means 100% of users in sample; 0.1 would be 0.1% of users, etc.
+    pageCountKey: "redcap_session_page_count",
+    thresholdKey: "redcap_session_page_threshold",
+    inSampleKey: "redcap_session_in_sample",
+    modalShownKey: "redcap_session_modal_shown",
+    poolCookieName: "redcap_survey_pool",
+    poolCookieDays: isDev ? 1 : 90,
+    logPrefix: "[Redcap Survey]",
+    titleText: "Customer Satisfaction Survey",
+    buttonText: "Open Survey",
+    target: "body",
+    bodyText: "Thank you for choosing CDC.gov.\n\n Your feedback is essential to help improve the usability of the website. This survey will take 5-10 minutes to complete. Your responses will remain confidential.\n\n Would you like to provide feedback?",
+    cancelText: "No thanks",
+    submitText: "Yes, I'd like to participate",
+    thankText: "Thank you for taking the survey. Click OK below to return to CDC.",
+    okText: "OK",
+    ombNumber: null,
+    ombExpiration: null,
+    privacyText: "Privacy Act Statement",
+    privacyUrl: "https://www.cdc.gov/other/privacy.html",
+  };
+
+  function safeParseInt(value, fallback) {
+    var parsed = parseInt(value, 10);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+
+  function safeParseFloat(value, fallback) {
+    var parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+
+  function getCookie(name) {
+    var cookies = document.cookie ? document.cookie.split(";") : [];
+    var index;
+    var cookie;
+
+    for (index = 0; index < cookies.length; index += 1) {
+      cookie = cookies[index].trim();
+      if (cookie.indexOf(name + "=") === 0) {
+        return decodeURIComponent(cookie.substring(name.length + 1));
+      }
+    }
+
+    return null;
+  }
+
+  function getPoolList(name) {
+    var raw = getCookie(name);
+    if (!raw) { return []; }
+    try {
+      var parsed = JSON.parse(decodeURIComponent(raw));
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function isInPool(name, surveyId) {
+    return getPoolList(name).indexOf(surveyId) !== -1;
+  }
+
+  function setPoolCookie(name, days, surveyId) {
+    var list = getPoolList(name);
+    if (list.indexOf(surveyId) === -1) {
+      list.push(surveyId);
+    }
+    var expires = new Date();
+    expires.setDate(expires.getDate() + days);
+    document.cookie = name + "=" + encodeURIComponent(JSON.stringify(list)) + "; expires=" + expires.toUTCString() + "; path=/; SameSite=Lax";
+  }
+
+  function clearPoolCookie(name) {
+    document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax";
+  }
+
+  function readCsidCookie() {
+    return getCookie("_cdc_sid");
+  }
+
+  function readPpuCookie() {
+    return getCookie("_cdc_ppu");
+  }
+
+  function appendQueryParamIfMissing(url, key, value) {
+    if (!url || !key || !value) {
+      return url;
+    }
+
+    var keyPattern = new RegExp("[?&]" + key + "=", "i");
+    if (keyPattern.test(url)) {
+      return url;
+    }
+
+    var separator = url.indexOf("?") >= 0 ? "&" : "?";
+    return url + separator + key + "=" + encodeURIComponent(value);
+  }
+
+  function appendTrackingParamsToIframeSrc(iframeSrc) {
+    var csid = readCsidCookie();
+    var ppu = readPpuCookie();
+
+    if (!iframeSrc) {
+      return iframeSrc;
+    }
+
+    var nextSrc = iframeSrc;
+    nextSrc = appendQueryParamIfMissing(nextSrc, "csid", csid);
+    nextSrc = appendQueryParamIfMissing(nextSrc, "ppu", ppu);
+    return nextSrc;
+  }
+
+  function handleInteractionBeacon(eventLabel, eventType, eventValue) {
+    var label = eventLabel || "";
+    var type = eventType || "o";
+
+    if (Object.prototype.hasOwnProperty.call(window, "_satellite")) {
+      var dataObject = {};
+      var satellite = window._satellite;
+
+      if (window.s && typeof window.s === "object") {
+        window.s.pageName = document.title;
+      }
+
+      dataObject.pageName = document.title;
+      dataObject.label = label;
+      //dataObject.lt = "o";
+      //dataObject.link = "redcap|survey1298";
+
+      dataObject.interactionType = "o";
+
+
+      dataObject.interactionValue = "ci-" + label + "_" + type + " : " + eventValue;
+      dataObject.prop46 = window.location.href;
+
+      if(eventType === "redcap|opt-in") {
+        dataObject.prop40 = "redcap|opt-in|" + eventValue;
+      } else if(eventType === "redcap|shown") {
+        dataObject.prop40 = "redcap|shown";
+      } else if(eventType === "redcap|duration") {
+        dataObject.prop40 = "redcap|duration";
+        dataObject.eVar29 = eventValue;
+      } else {
+        dataObject.prop40 = eventValue;
+      }
+
+      satellite.track("interaction", dataObject);
+    }
+  }
+
+  function createSurveyExperience(config) {
+    var storage = window.sessionStorage;
+    var surveyKeySuffix = "_" + (config.surveyId || DEFAULT_CONFIG.surveyId);
+    var pageCountKey  = (config.pageCountKey  || DEFAULT_CONFIG.pageCountKey)  + surveyKeySuffix;
+    var thresholdKey  = (config.thresholdKey  || DEFAULT_CONFIG.thresholdKey)  + surveyKeySuffix;
+    var inSampleKey   = (config.inSampleKey   || DEFAULT_CONFIG.inSampleKey)   + surveyKeySuffix;
+    var modalShownKey = (config.modalShownKey || DEFAULT_CONFIG.modalShownKey) + surveyKeySuffix;
+    var pageThreshold = safeParseInt(config.pageThreshold, DEFAULT_CONFIG.pageThreshold);
+    var sampleRate = safeParseFloat(config.sampleRate, DEFAULT_CONFIG.sampleRate);
+    var poolCookieName = config.poolCookieName || DEFAULT_CONFIG.poolCookieName;
+    var poolCookieDays = safeParseInt(config.poolCookieDays, DEFAULT_CONFIG.poolCookieDays);
+
+    var state = {
+      pageCount: 0,
+      inSample: false,
+      hasShownModal: false,
+      shouldShowSurvey: false,
+      modalOpenedAtMs: null,
+      previousFocus: null
+    };
+
+    var activeFocusTrapHandler = null;
+
+    function getFocusableElements(container) {
+      return Array.prototype.slice.call(
+        container.querySelectorAll(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter(function (el) {
+        return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+      });
+    }
+
+    function attachFocusTrap(container) {
+      detachFocusTrap();
+      activeFocusTrapHandler = function (event) {
+        if (event.key !== "Tab") {
+          return;
+        }
+        // Only trap while the container is visible.
+        if (container.style.display !== "flex") {
+          return;
+        }
+        var focusable = getFocusableElements(container);
+        if (focusable.length === 0) {
+          event.preventDefault();
+          return;
+        }
+        var first = focusable[0];
+        var last = focusable[focusable.length - 1];
+        if (event.shiftKey) {
+          if (document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+          }
+        }
+      };
+      document.addEventListener("keydown", activeFocusTrapHandler);
+    }
+
+    function detachFocusTrap() {
+      if (activeFocusTrapHandler) {
+        document.removeEventListener("keydown", activeFocusTrapHandler);
+        activeFocusTrapHandler = null;
+      }
+    }
+
+    function logNote(message, details) {
+        if (details) {
+          if (isDebug) console.log(config.logPrefix || "[Survey]", "[Flow]", message, details);
+          return;
+        }
+        if (isDebug) console.log(config.logPrefix || "[Survey]", "[Flow]", message);
+    }
+
+    function loadThreshold() {
+      var stored = storage.getItem(thresholdKey);
+      return stored ? safeParseInt(stored, pageThreshold) : pageThreshold;
+    }
+
+    function loadPageCount() {
+      return safeParseInt(storage.getItem(pageCountKey), 0);
+    }
+
+    function savePageCount(value) {
+      storage.setItem(pageCountKey, String(value));
+    }
+
+    function loadInSample() {
+      return storage.getItem(inSampleKey) === "1";
+    }
+
+    function loadModalShown() {
+      return storage.getItem(modalShownKey) === "1";
+    }
+
+    function persistModalShown() {
+      storage.setItem(modalShownKey, "1");
+      state.hasShownModal = true;
+      setPoolCookie(poolCookieName, poolCookieDays, config.iframeSrc);
+      logNote("Modal shown flag persisted; pool cookie set to suppress re-invitation.", { poolCookieName: poolCookieName, poolCookieDays: poolCookieDays });
+    }
+
+    function clearPersistedState() {
+      storage.removeItem(pageCountKey);
+      storage.removeItem(thresholdKey);
+      storage.removeItem(inSampleKey);
+      storage.removeItem(modalShownKey);
+      clearPoolCookie(poolCookieName);
+      logNote("All session storage keys and pool cookie were cleared.");
+    }
+
+    function initializeSessionState() {
+      // Exclusion check: persistent pool cookie supersedes all session logic.
+      if (isInPool(poolCookieName, config.iframeSrc)) {
+        state.inSample = false;
+        state.hasShownModal = true;
+        logNote("User is pooled via persistent cookie; skipping eligibility checks.", { poolCookieName: poolCookieName });
+        return;
+      }
+
+      if (storage.getItem(inSampleKey) === null) {
+        var sampledIn = Math.random() < (sampleRate/100);
+        storage.setItem(inSampleKey, sampledIn ? "1" : "0");
+        logNote("Sampling decision created for this session.", {
+          sampleRate: sampleRate,
+          inSample: sampledIn
+        });
+      }
+
+      if (storage.getItem(pageCountKey) === null) {
+        storage.setItem(pageCountKey, "0");
+        logNote("Page view counter initialized to 0.");
+      }
+
+      if (storage.getItem(modalShownKey) === null) {
+        storage.setItem(modalShownKey, "0");
+        logNote("Modal shown flag initialized to 0.");
+      }
+
+      if (storage.getItem(thresholdKey) === null) {
+        storage.setItem(thresholdKey, String(pageThreshold));
+        logNote("Page threshold initialized for this session.", {
+          threshold: pageThreshold
+        });
+      }
+
+      state.inSample = loadInSample();
+      state.hasShownModal = loadModalShown();
+    }
+
+    function incrementPageCount() {
+      var next = loadPageCount() + 1;
+      savePageCount(next);
+      state.pageCount = next;
+      logNote("Page view count incremented.", {
+        pageCount: state.pageCount
+      });
+      return next;
+    }
+
+    function setSurveyVisible(surveyElement, isVisible) {
+      surveyElement.style.display = isVisible ? "flex" : "none";
+      surveyElement.setAttribute("aria-hidden", isVisible ? "false" : "true");
+    }
+
+    function clearSurveyVisibility(surveyElement, iframeElement) {
+      detachFocusTrap();
+      setSurveyVisible(surveyElement, false);
+      if (iframeElement && iframeElement.parentNode) {
+        var iframeParent = iframeElement.parentNode;
+        iframeParent.removeChild(iframeElement);
+        iframeElement.setAttribute("src", "");
+        iframeParent.appendChild(iframeElement);
+      }
+      state.modalOpenedAtMs = null;
+    }
+
+    function focusModal(surveyElement) {
+      var focusable = surveyElement.querySelector(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      var target = focusable || surveyElement;
+      setTimeout(function () { target.focus(); }, 0);
+    }
+
+    function showSurvey(surveyElement, optinPanelElement, surveyPanelElement, thankPanelElement) {
+      if(!(isDev && isDebug)){
+        if (state.hasShownModal) {
+          logNote("Survey display blocked because modal already showed once this session.");
+          return false;
+        }
+      }
+
+      state.previousFocus = document.activeElement || null;
+      setSurveyVisible(surveyElement, true);
+      if (optinPanelElement) {
+        optinPanelElement.style.display = "";
+      }
+      if (surveyPanelElement) {
+        surveyPanelElement.style.display = "none";
+      }
+      if (thankPanelElement) {
+        thankPanelElement.style.display = "none";
+      }
+      focusModal(surveyElement);
+      attachFocusTrap(surveyElement);
+      handleInteractionBeacon("redcap|survey" + config.surveyId, "redcap|shown", (new Date()).toISOString());
+      persistModalShown();
+      logNote("survey_impression", {
+        pageCount: state.pageCount,
+        threshold: loadThreshold()
+      });
+
+      return true;
+    }
+
+    function renderStatus(statusElement) {
+      if (!statusElement) {
+        return;
+      }
+
+      var threshold = loadThreshold();
+      var remaining = Math.max(0, threshold - state.pageCount);
+      statusElement.innerHTML =
+        "<strong>Page Count:</strong> " + state.pageCount +
+        "<br><strong>Threshold:</strong> " + threshold +
+        "<br><strong>In Sample:</strong> " + (state.inSample ? "Yes" : "No") +
+        "<br><strong>Modal Already Shown:</strong> " + (state.hasShownModal ? "Yes" : "No") +
+        "<br><strong>Remaining Before Survey:</strong> " + remaining;
+    }
+
+    function wireModalControls(surveyElement, iframeElement, iframeSrc, openButtonElement, closeButtonElement, optinPanelElement, surveyPanelElement, thankPanelElement, okButtonElement, yesButtonElement, noButtonElement) {
+      function openModal(trigger, options) {
+        var forceOpen = !!(options && options.force);
+
+        if (!forceOpen && !state.inSample) {
+          logNote("Manual open ignored because user was not sampled into survey audience.");
+          return;
+        }
+
+        if (!forceOpen && state.pageCount < loadThreshold()) {
+          logNote("Manual open ignored because page threshold not reached.", {
+            pageCount: state.pageCount,
+            threshold: loadThreshold()
+          });
+          return;
+        }
+
+        if (!forceOpen && state.hasShownModal) {
+          logNote("Manual open ignored because modal already displayed once this session.");
+          return;
+        }
+
+        if (forceOpen) {
+          logNote("Manual open force-enabled for testing; bypassing sample and threshold checks.", {
+            trigger: trigger || "unknown"
+          });
+        }
+
+        state.previousFocus = document.activeElement || null;
+        setSurveyVisible(surveyElement, true);
+        if (optinPanelElement) {
+          optinPanelElement.style.display = "";
+        }
+        if (surveyPanelElement) {
+          surveyPanelElement.style.display = "none";
+        }
+        if (thankPanelElement) {
+          thankPanelElement.style.display = "none";
+        }
+        focusModal(surveyElement);
+        attachFocusTrap(surveyElement);
+        handleInteractionBeacon("redcap|survey" + config.surveyId, "redcap|shown", (new Date()).toISOString());
+        persistModalShown();
+        logNote("survey_open", {
+          trigger: trigger || "unknown",
+          pageCount: state.pageCount
+        });
+      }
+
+      function closeModal(trigger) {
+        var durationMs = null;
+        if (
+          trigger === "close_button" &&
+          typeof state.modalOpenedAtMs === "number" &&
+          Number.isFinite(state.modalOpenedAtMs)){
+          durationMs = Math.max(0, Date.now() - state.modalOpenedAtMs);
+        }
+
+        clearSurveyVisibility(surveyElement, iframeElement);
+        if (state.previousFocus && typeof state.previousFocus.focus === "function") {
+          state.previousFocus.focus();
+          state.previousFocus = null;
+        }
+        if (optinPanelElement) {
+          optinPanelElement.style.display = "";
+        }
+        if (surveyPanelElement) {
+          surveyPanelElement.style.display = "none";
+        }
+        if (thankPanelElement) {
+          thankPanelElement.style.display = "none";
+        }
+        logNote("Modal closed; session state retained so it will not show again this session.", {
+          trigger: trigger || "unknown",
+          openDurationMs: durationMs
+        });
+
+        var closePayload = {
+          trigger: trigger || "unknown",
+          pageCount: state.pageCount
+        };
+        if (durationMs !== null) {
+          closePayload.openDurationMs = durationMs;
+          handleInteractionBeacon("redcap|survey" + config.surveyId, "redcap|duration", durationMs);
+        }
+        logNote("survey_close", closePayload);
+      }
+
+      if (openButtonElement && !openButtonElement.getAttribute("data-redcap-hooked")) {
+        openButtonElement.setAttribute("data-redcap-hooked", "true");
+        openButtonElement.addEventListener("click", function (event) {
+          event.preventDefault();
+          openModal("manual_button");
+        });
+      }
+
+      if (closeButtonElement && !closeButtonElement.getAttribute("data-redcap-hooked")) {
+        closeButtonElement.setAttribute("data-redcap-hooked", "true");
+        closeButtonElement.addEventListener("click", function (event) {
+          event.preventDefault();
+          closeModal("close_button");
+        });
+      }
+
+      if (okButtonElement && !okButtonElement.getAttribute("data-redcap-hooked")) {
+        okButtonElement.setAttribute("data-redcap-hooked", "true");
+        okButtonElement.addEventListener("click", function(event) {
+          event.preventDefault();
+          closeModal("close_button");
+        })
+      }
+
+      if (yesButtonElement && !yesButtonElement.getAttribute("data-redcap-hooked")) {
+        yesButtonElement.setAttribute("data-redcap-hooked", "true");
+        yesButtonElement.addEventListener("click", function (event) {
+          event.preventDefault();
+          if (optinPanelElement) {
+            optinPanelElement.style.display = "none";
+          }
+          if(!config.iframeWhitelist.includes(window.location.hostname)){
+            window.open(appendTrackingParamsToIframeSrc(iframeSrc), "_blank");
+            if (thankPanelElement) {
+              thankPanelElement.style.display = "";
+            }
+          } else {
+            if (surveyPanelElement) {
+              surveyPanelElement.style.display = "";
+            }
+            if (iframeElement && iframeSrc && !iframeElement.getAttribute("src")) {
+              iframeElement.setAttribute("src", appendTrackingParamsToIframeSrc(iframeSrc));
+              logNote("Survey iframe source assigned after opt-in.", { iframeSrc: iframeSrc });
+            }
+          }
+          state.modalOpenedAtMs = Date.now();
+          handleInteractionBeacon("redcap|survey" + config.surveyId, "redcap|opt-in", "yes");
+          logNote("survey_opted_in", { pageCount: state.pageCount });
+        });
+      }
+
+      if (noButtonElement && !noButtonElement.getAttribute("data-redcap-hooked")) {
+        noButtonElement.setAttribute("data-redcap-hooked", "true");
+        noButtonElement.addEventListener("click", function (event) {
+          event.preventDefault();
+          handleInteractionBeacon("redcap|survey" + config.surveyId, "redcap|opt-in", "no");
+          closeModal("no_thanks");
+        });
+      }
+
+      function handleEscapeKey(event) {
+        if (event.key === "Escape" && surveyElement.style.display === "flex") {
+          closeModal("escape_key");
+        }
+      }
+
+      document.addEventListener("keydown", handleEscapeKey);
+
+      // When the survey iframe receives focus, keyboard events fire inside its
+      // own document and never reach the parent listener above. Attach the same
+      // ESC handler to the iframe's contentWindow once it has loaded.
+      if (iframeElement) {
+        iframeElement.addEventListener("load", function () {
+          try {
+            iframeElement.contentWindow.document.addEventListener("keydown", handleEscapeKey);
+          } catch (e) {
+            // Cross-origin iframe — cannot attach listener; ESC via parent only.
+            logNote("Could not attach ESC listener to cross-origin iframe.", { error: e.message });
+          }
+        });
+      }
+
+      window.addEventListener("beforeunload", function () {
+        if (
+          typeof state.modalOpenedAtMs === "number" &&
+          Number.isFinite(state.modalOpenedAtMs)
+        ) {
+          var durationMs = Math.max(0, Date.now() - state.modalOpenedAtMs);
+          handleInteractionBeacon("redcap|survey" + config.surveyId, "redcap|duration", durationMs);
+        }
+      });
+
+      return {
+        openModal: openModal,
+        closeModal: closeModal
+      };
+    }
+
+    function init(options) {
+      var statusElement = options.statusElement || null;
+      var surveyElement = options.surveyElement;
+      var iframeElement = options.iframeElement || surveyElement.querySelector("iframe");
+      var iframeSrc = options.iframeSrc || "";
+      var openButtonElement = options.openButtonElement || null;
+      var closeButtonElement = options.closeButtonElement || null;
+      var optinPanelElement = options.optinPanelElement || null;
+      var surveyPanelElement = options.surveyPanelElement || null;
+      var thankPanelElement = options.thankPanelElement || null;
+      var okButtonElement = options.okButtonElement || null;
+      var yesButtonElement = options.yesButtonElement || null;
+      var noButtonElement = options.noButtonElement || null;
+
+      if (!surveyElement) {
+        throw new Error("Missing required survey element for survey experience.");
+      }
+
+      logNote("Initializing survey experience with session-based tracking.");
+      initializeSessionState();
+
+      var threshold = loadThreshold();
+      storage.setItem(thresholdKey, String(threshold));
+
+      state.pageCount = incrementPageCount();
+      state.shouldShowSurvey =
+        state.inSample &&
+        !state.hasShownModal &&
+        state.pageCount >= threshold;
+
+      if(isDev && isDebug) state.shouldShowSurvey = true;
+
+      logNote("Eligibility evaluated for auto-open behavior.", {
+        inSample: state.inSample,
+        hasShownModal: state.hasShownModal,
+        pageCount: state.pageCount,
+        threshold: threshold,
+        shouldShowSurvey: state.shouldShowSurvey
+      });
+
+      logNote("page_view", {
+        pageCount: state.pageCount,
+        threshold: threshold,
+        inSample: state.inSample,
+        hasShownModal: state.hasShownModal,
+        surveyVisible: state.shouldShowSurvey
+      });
+
+      var modalControls = wireModalControls(
+        surveyElement,
+        iframeElement,
+        iframeSrc,
+        openButtonElement,
+        closeButtonElement,
+        optinPanelElement,
+        surveyPanelElement,
+        thankPanelElement,
+        okButtonElement,
+        yesButtonElement,
+        noButtonElement
+      );
+
+      renderStatus(statusElement);
+
+      if (state.shouldShowSurvey) {
+        showSurvey(surveyElement, optinPanelElement, surveyPanelElement, thankPanelElement);
+      } else {
+        clearSurveyVisibility(surveyElement, iframeElement);
+        logNote("Survey remains hidden on this page view due to eligibility rules.");
+      }
+
+      return modalControls;
+    }
+
+    function resetState() {
+      clearPersistedState();
+      window.location.reload();
+    }
+
+    return {
+      init: init,
+      resetState: resetState
+    };
+  }
+
+  function ensureStyles(config) {
+    if (document.getElementById(config)) {
+      return;
+    }
+
+    var style = document.createElement("style");
+    style.id = config.idPrefix + "-styles";
+    style.textContent =
+      "." + config.idPrefix + "-open-btn{padding:8px 12px;cursor:pointer;}" +
+      "." + config.idPrefix + "-status{margin:8px 0 12px;font-size:14px;}" +
+      "." + config.idPrefix + "-modal{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.45);}" +
+      "." + config.idPrefix + "-card{text-align:center;background:#fff;width:min(760px,92vw);border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.2);padding:1rem;position:relative;margin:1rem}" +
+      "@media screen and (min-width: 768px) {." + config.idPrefix + "-card{padding:2rem;}}" +
+      "." + config.idPrefix + "-title{font-size:1.25rem;;margin-bottom:1rem;max-width:96%}" +
+      "." + config.idPrefix + "-close{color:#3D4551;position:absolute;top:10px;right:12px;border:0;background:transparent;font-size:24px;cursor:pointer;line-height:1;}" +
+      "." + config.idPrefix + "-iframe{width:100%;height:420px;border:1px solid #ddd;}" +
+      "." + config.idPrefix + "-optin-question{font-size:1rem;margin-bottom:1.25rem;white-space:pre-line;}" +
+      "." + config.idPrefix + "-optin-actions{display:flex;gap:12px;justify-content:center;}" +
+      "." + config.idPrefix + "-omb{font-size: 14px;margin-top:1.5rem;color:#3D4551}" +
+      "." + config.idPrefix + "-omb p{margin-bottom:0;}" +
+      "." + config.idPrefix + "-omb span + span{margin-left:.5rem;}" +
+      "." + config.idPrefix + "-omb a{text-decoration:none;} ." + config.idPrefix + "-omb a:hover{text-decoration:underline;}" +
+      "." + config.idPrefix + "-btn-yes,." + config.idPrefix + "-btn-no{padding:10px 28px;border-radius:4px;border:0;cursor:pointer;font-size:15px;}" +
+      "." + config.idPrefix + "-btn-yes{background:#005ea2;color:#fff;}" +
+      "." + config.idPrefix + "-btn-yes:hover{background:#0050a0;}" +
+      "." + config.idPrefix + "-btn-no{background:#e0e0e0;color:#222;}" +
+      "." + config.idPrefix + "-btn-no:hover{background:#c8c8c8;}";
+    document.head.appendChild(style);
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function buildMarkup(config) {
+    var prefix = config.idPrefix;
+    let ombInfo = `
+      <div class="redcap-survey-omb">
+        <p>
+          ${config.ombNumber ? `<span>OMB Control #: ${escapeHtml(config.ombNumber)}</span>` : ''}
+          ${config.ombExpiration ? `<span>Expiration: ${escapeHtml(config.ombExpiration)}</span>` : ''}
+          <span><a target="_blank" href="${config.privacyUrl}">${escapeHtml(config.privacyText)}</a></span>
+        </p>
+      </div>
+    `;
+
+    return (
+      '<div id="' + prefix + '-root">' +
+        '<div id="' + prefix + '-modal" class="' + prefix + '-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="' + prefix + '-title">' +
+          '<div class="' + prefix + '-card">' +
+            '<button id="' + prefix + '-close" class="' + prefix + '-close" type="button" aria-label="Close survey">&times;</button>' +
+            '<h5 id="' + prefix + '-title" class="' + prefix + '-title">' + escapeHtml(config.titleText) + '</h5>' +
+            '<div id="' + prefix + '-optin" class="' + prefix + '-optin">' +
+              '<p class="' + prefix + '-optin-question">' + escapeHtml(config.bodyText) + '</p>' +
+              '<div class="' + prefix + '-optin-actions">' +
+                '<button id="' + prefix + '-no" class="' + prefix + '-btn-no" type="button">' + escapeHtml(config.cancelText) + '</button>' +
+                '<button id="' + prefix + '-yes" class="' + prefix + '-btn-yes" type="button">' + escapeHtml(config.submitText) + '</button>' +
+              '</div>' +
+              ombInfo +
+            '</div>' +
+            '<div id="' + prefix + '-survey-panel" class="' + prefix + '-survey-panel" style="display:none;">' +
+              '<iframe id="' + prefix + '-iframe" class="' + prefix + '-iframe" src="" frameborder="0" allowfullscreen></iframe>' +
+            '</div>' +
+            '<div id="' + prefix + '-thank" class="' + prefix + '-thank" style="display:none;">' +
+              '<p>' + escapeHtml(config.thankText) + '</p>' +
+              '<div class="' + prefix + '-optin-actions">' +
+                '<button id="' + prefix + '-ok" class="' + prefix + '-btn-ok" type="button">' + escapeHtml(config.okText) + '</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function resolveTarget(target) {
+    if (target && target.nodeType === 1) {
+      return target;
+    }
+
+    if (typeof target === "string") {
+      var found = document.querySelector(target);
+      if (found) {
+        return found;
+      }
+    }
+
+    return document.body;
+  }
+
+  function mount(userOptions) {
+    var options = userOptions || {};
+
+    if (typeof options.shouldInject === "function" && !options.shouldInject()) {
+      return { mounted: false, reason: "shouldInject returned false" };
+    }
+
+    var config = {
+      idPrefix: options.idPrefix || DEFAULT_CONFIG.idPrefix,
+      iframeWhitelist: options.iframeWhitelist || [],
+      iframeSrc: options.iframeSrc || DEFAULT_CONFIG.iframeSrc,
+      surveyId: options.surveyId || DEFAULT_CONFIG.surveyId,
+      pageThreshold: safeParseInt(options.pageThreshold, DEFAULT_CONFIG.pageThreshold),
+      sampleRate: safeParseFloat(options.sampleRate, DEFAULT_CONFIG.sampleRate),
+      pageCountKey: options.pageCountKey || DEFAULT_CONFIG.pageCountKey,
+      thresholdKey: options.thresholdKey || DEFAULT_CONFIG.thresholdKey,
+      inSampleKey: options.inSampleKey || DEFAULT_CONFIG.inSampleKey,
+      modalShownKey: options.modalShownKey || DEFAULT_CONFIG.modalShownKey,
+      poolCookieName: options.poolCookieName || DEFAULT_CONFIG.poolCookieName,
+      poolCookieDays: safeParseInt(options.poolCookieDays, DEFAULT_CONFIG.poolCookieDays),
+      logPrefix: options.logPrefix || DEFAULT_CONFIG.logPrefix,
+      titleText: options.titleText || DEFAULT_CONFIG.titleText,
+      buttonText: options.buttonText || DEFAULT_CONFIG.buttonText,
+      target: options.target || DEFAULT_CONFIG.target,
+      bodyText: options.bodyText || DEFAULT_CONFIG.bodyText,
+      cancelText: options.cancelText || DEFAULT_CONFIG.cancelText,
+      submitText: options.submitText || DEFAULT_CONFIG.submitText,
+      thankText: options.thankText || DEFAULT_CONFIG.thankText,
+      okText: options.okText || DEFAULT_CONFIG.okText,
+      ombNumber: options.ombNumber || DEFAULT_CONFIG.ombNumber,
+      ombExpiration: options.ombExpiration || DEFAULT_CONFIG.ombExpiration,
+      privacyText: options.privacyText || DEFAULT_CONFIG.privacyText,
+      privacyUrl: options.privacyUrl || DEFAULT_CONFIG.privacyUrl
+    };
+
+    ensureStyles(config);
+
+    var targetElement = resolveTarget(config.target);
+    var rootId = config.idPrefix + "-root";
+    var existingRoot = document.getElementById(rootId);
+    if (!existingRoot) {
+      targetElement.insertAdjacentHTML("beforeend", buildMarkup(config));
+      existingRoot = document.getElementById(rootId);
+    }
+
+    var surveyApp = createSurveyExperience(config);
+
+    var controls = surveyApp.init({
+      statusElement: document.getElementById(config.idPrefix + "-status"),
+      surveyElement: document.getElementById(config.idPrefix + "-modal"),
+      iframeElement: document.getElementById(config.idPrefix + "-iframe"),
+      openButtonElement: document.getElementById(config.idPrefix + "-open"),
+      closeButtonElement: document.getElementById(config.idPrefix + "-close"),
+      optinPanelElement: document.getElementById(config.idPrefix + "-optin"),
+      surveyPanelElement: document.getElementById(config.idPrefix + "-survey-panel"),
+      thankPanelElement: document.getElementById(config.idPrefix + "-thank"),
+      okButtonElement: document.getElementById(config.idPrefix + "-ok"),
+      yesButtonElement: document.getElementById(config.idPrefix + "-yes"),
+      noButtonElement: document.getElementById(config.idPrefix + "-no"),
+      iframeSrc: config.iframeSrc
+    });
+
+    var externalOpenButton = document.getElementById("openModalBtn");
+    if (externalOpenButton && !externalOpenButton.getAttribute("data-redcap-hooked")) {
+      externalOpenButton.setAttribute("data-redcap-hooked", "true");
+      externalOpenButton.addEventListener("click", function (event) {
+        event.preventDefault();
+        controls.openModal("external_button", { force: true });
+      });
+      if (isDebug) {
+        console.log(config.logPrefix, "[Flow]", "External open button hook attached.", {
+          buttonId: "openModalBtn",
+          mode: "force_open_for_testing"
+        });
+      }
+    }
+
+    lastMountResult = {
+      mounted: true,
+      rootElement: existingRoot,
+      controls: controls,
+      resetState: surveyApp.resetState
+    };
+
+    return lastMountResult;
+  }
+
+  function unmount(idPrefix) {
+    var prefix = idPrefix || "redcap-survey";
+    var root = document.getElementById(prefix + "-root");
+    if (root && root.parentNode) {
+      root.parentNode.removeChild(root);
+    }
+    if (lastMountResult && lastMountResult.rootElement === root) {
+      lastMountResult = null;
+    }
+  }
+
+  function getLastMount() {
+    return lastMountResult;
+  }
+
+  function clearSession(options) {
+    var opts = options || {};
+    var keys = {
+      pageCount: opts.pageCountKey || DEFAULT_CONFIG.pageCountKey,
+      threshold: opts.thresholdKey || DEFAULT_CONFIG.thresholdKey,
+      inSample: opts.inSampleKey || DEFAULT_CONFIG.inSampleKey,
+      modalShown: opts.modalShownKey || DEFAULT_CONFIG.modalShownKey
+    };
+
+    Object.keys(keys).forEach(function (label) {
+      window.sessionStorage.removeItem(keys[label]);
+    });
+
+    clearPoolCookie(opts.poolCookieName || DEFAULT_CONFIG.poolCookieName);
+    sessionStorage.clear();
+
+    if (isDebug) console.log("[Redcap Survey]", "[Flow]", "Session cleared via clearSession().", keys);
+  }
+
+  window.RedcapSurveyBundle = {
+    mount: mount,
+    unmount: unmount,
+    getLastMount: getLastMount,
+    clearSession: clearSession,
+    createSurveyExperience: createSurveyExperience
+  };
+
+})(window, document);

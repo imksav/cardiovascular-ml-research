@@ -1,0 +1,542 @@
+'use strict';
+
+( function( window ) {
+
+	if ( 'undefined' !== typeof CDC && 'undefined' !== typeof CDC.ABTest ) {
+
+		var now = new Date();
+
+		var testId = CDC.ABTest.id();
+		var testType = CDC.ABTest.type();
+		var redirect = CDC.ABTest.redirect();
+		var testActive = CDC.ABTest.active();
+		var testViewports = CDC.ABTest.viewports();
+		var callback = CDC.ABTest.callback();
+		var apiEndpoint = 'https://tools.cdc.gov/abtest/variant/seed?c=2&ex=';
+
+		var abId;
+		var abCookieValue;
+		var abCookie;
+		var abCookies;
+		var cookies;
+
+		var queryParms = window.location.href.slice( window.location.href.indexOf( '?' ) + 1 ).split( '&' );
+
+		var highlightParam = $.grep( queryParms, function( param ) {
+			return -1 < param.indexOf( 'highlight=true' );
+		} );
+		var highlight = 0 < highlightParam.length;
+
+		var overrideVariant = $.map( queryParms, function( param ) {
+			if ( -1 < param.indexOf( 'variant=' ) ) {
+				return param.split( '=' )[ 1 ];
+			} else {
+				return null;
+			}
+		} );
+
+		var expDate = new Date();
+		expDate.setTime( expDate.getTime() + ( 356 * 24 * 60 * 60 * 1000 ) ); // add 1 year
+
+		//
+		// Method to run A/B redirect test.
+		//
+		var runRedirectTest = async function() {
+			if (typeof s === 'undefined') {
+				window.s = {
+					channel: '',
+					pageName: '',
+					t: () => {
+						document.dispatchEvent( new CustomEvent( 'cdc_pageview', { detail: s } ) );
+					},
+					tl: (linkObject, lt, ln) => {
+						document.dispatchEvent( new CustomEvent( 'cdc_interaction', { detail: {...s, lt, ln} } ) );
+					}
+				};
+			}
+
+			// Add meta tag to disable auto tracking of page view
+			var meta = document.createElement( 'meta' );
+			meta.setAttribute( 'property', 'cdc:pageview' );
+			meta.setAttribute( 'content', 'false' );
+			document.getElementsByTagName( 'head' )[ 0 ].appendChild( meta );
+
+			// Use the values passed in on the redirect object within the settings to determine whether to redirect or not and to send metrics.
+			abId = redirect.id;
+			abId = 'AB_Redirect_' + abId;
+			var percent = redirect.percent;
+			var currentUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
+			var baselineUrl = redirect.baselineUrl;
+			var variantUrl = redirect.variantUrl;
+
+			var sanitizeQueryString = function( search ) {
+				var safeParams = new URLSearchParams();
+
+				try {
+					new URLSearchParams( search ).forEach( function( value, key ) {
+						if (
+							/^[A-Za-z0-9_.~-]{1,128}$/.test( key ) &&
+							value.length <= 2048 &&
+							!/[\x00-\x1f\x7f<>"'`]/.test( value )
+						) {
+							safeParams.append( key, value );
+						}
+					} );
+				} catch ( e ) {
+					return '';
+				}
+
+				return safeParams.toString();
+			};
+
+			var sanitizeHash = function( hash ) {
+				var value = hash.charAt( 0 ) === '#' ? hash.substring( 1 ) : hash;
+				if ( 256 < value.length ) {
+					return '';
+				}
+				return /^(?:[A-Za-z0-9._~!$&()*+,;=:@/?-]|%[0-9A-Fa-f]{2})*$/.test( value ) ? value : '';
+			};
+
+			var getRedirectUrl = function( targetUrl ) {
+				try {
+					var currentLocation = new URL( window.location.href );
+					var redirectLocation = new URL( targetUrl, currentLocation.origin );
+					var queryString;
+					var hash;
+
+					if (
+						redirectLocation.origin !== currentLocation.origin ||
+						( redirectLocation.protocol !== 'http:' && redirectLocation.protocol !== 'https:' )
+					) {
+						return '';
+					}
+
+					queryString = sanitizeQueryString( currentLocation.search );
+					hash = sanitizeHash( currentLocation.hash );
+					redirectLocation.search = queryString ? '?' + queryString : '';
+					redirectLocation.hash = hash ? '#' + hash : '';
+
+					return redirectLocation.href;
+				} catch ( e ) {
+					return '';
+				}
+			};
+
+			var redirectTo = function( targetUrl ) {
+				var redirectUrl = getRedirectUrl( targetUrl );
+				if ( redirectUrl ) {
+					window.location.assign( redirectUrl );
+					return true;
+				}
+				console.warn( 'A/B redirect skipped because the target URL was not allowed: ' + targetUrl );
+				return false;
+			};
+
+			const determineUseVariant = async function() {
+				return new Promise( async ( resolve, reject ) => {
+					$.ajax({
+						url: apiEndpoint + redirect.id + '&s=' + percent
+					}).done( function( result ) {
+						try {
+							result = JSON.parse( result );
+							resolve( result.variant === 1 );
+						} catch ( e ) {
+							console.error( 'Error parsing A/B test API response', e );
+							resolve( false );
+						}
+					} ).fail( function( jqXHR, textStatus, errorThrown ) {
+						console.error( 'Error calling A/B test API', textStatus, errorThrown );
+						resolve( false );
+					});
+				});
+			};
+
+			const setCookie = (testId, redirectId, value) => {
+				document.cookie = 'CDC_ABTest_Redirect_' + testId + '_' + redirectId + '=' + value + '; path=/; secure';
+			}
+
+			const deleteCookie = (testId, redirectId) => {
+				document.cookie = 'CDC_ABTest_Redirect_' + testId + '_' + redirectId + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure';
+			}
+
+			var useVariant = undefined;
+
+			// Get cookie value and set useVariant based on its value
+			abCookieValue = '';
+			abCookie = '';
+			abCookies = [];
+			cookies = document.cookie.split( ';' );
+			abCookies = cookies.filter( function( cookieItem ) {
+				return -1 < cookieItem.indexOf( 'CDC_ABTest_Redirect_' + testId + '_' + redirect.id );
+			} );
+			if ( 0 < abCookies.length ) {
+				abCookie = abCookies[ 0 ].split( '=' );
+				if ( 0 < abCookie.length ) {
+					abCookieValue = abCookie[ 1 ];
+				}
+			}
+			if ( abCookieValue === '' ) {
+				useVariant = await determineUseVariant();
+				setCookie(testId, redirect.id, useVariant ? variantUrl : baselineUrl);
+			} else {
+				useVariant = abCookieValue === variantUrl ? true : false;
+			}
+
+			// If we are on the wrong page, set a cookie and redirect
+			if ( useVariant && ( currentUrl !== variantUrl ) ) {
+				if ( redirectTo( variantUrl ) ) {
+					return;
+				}
+			} else if( !useVariant && ( currentUrl !== baselineUrl ) ) {
+				if ( redirectTo( baselineUrl ) ) {
+					return;
+				}
+			}
+
+			// If we are on the correct page, and the test is not sticky, delete the cookie so that the next time the user comes to the site they will have a fresh experience
+			if ( !redirect.sticky ) {
+				deleteCookie(testId, redirect.id);
+			}
+
+			// Track the test participation with the appropriate metrics values
+			s.prop64 = testId;
+			s.eVar8 = currentUrl === variantUrl ? 'variant' : 'baseline';
+			s.prop38 = baselineUrl;
+			if (document.body.className.indexOf('dmat-load-complete') > -1) {
+				_satellite.track( 'pageview', {} );
+			} else {
+				document.body.addEventListener( 'dmat-load-complete', function() {
+					_satellite.track( 'pageview', {} );
+				});
+			}
+
+			// Rewrite the URL in the left nav if we are on the variant page.
+			if ( currentUrl.toLowerCase() !== baselineUrl.toLowerCase() ) {
+				var baselineRelUrl = baselineUrl;
+				if ( -1 < baselineRelUrl.indexOf( '//' ) ) {
+					baselineRelUrl = baselineRelUrl.substring( baselineRelUrl.indexOf( '//' ) + 2 );
+					baselineRelUrl = baselineRelUrl.substring( baselineRelUrl.indexOf( '/' ) );
+				}
+
+				var currentRelUrl = currentUrl;
+				if ( -1 < currentUrl.indexOf( '//' ) ) {
+					currentRelUrl = currentRelUrl.substring( currentRelUrl.indexOf( '//' ) + 2 );
+					currentRelUrl = currentRelUrl.substring( currentRelUrl.indexOf( '/' ) );
+				}
+
+				if ( 0 < $( 'nav ul li a[href="' + baselineRelUrl + '"]' ).length ) {
+					$( 'nav ul li a[href="' + baselineRelUrl + '"]' ).attr( 'href', currentRelUrl );
+				}
+			}
+			
+			// Display the page, flicker prevention
+			document.documentElement.className = document.documentElement.className.replace( RegExp( ' ?d-none' ), '' );
+		}
+
+		//
+		// Method to run A/B module test.
+		//
+		var runModuleTest = function() {
+
+			// The master deferred.
+			var dfd = $.Deferred();
+			var dfdNext = dfd; // Next deferred in the chain
+			var values = [];
+
+			var modules = $( 'div[data-abid]' );
+			var count = modules.length;
+
+			var callApi = function( value ) {
+				var dfdAjax = $.Deferred();
+
+				var experimentId;
+				if ( 1 < count ) {
+					experimentId = testId + '-' + value;
+				} else {
+					experimentId = testId;
+				}
+
+				// Get sample/switch percentage (default is 50).
+				var requestedPercentAttr = item.attr( 'data-percent-variant' );
+				var requestedPercent = 50;
+				if ( requestedPercentAttr && !isNaN( parseInt( requestedPercentAttr ) ) ) {
+					requestedPercent = parseInt( requestedPercentAttr );
+				}
+
+				// Determine if the showing of baseline versus variant is being persisted in a cookie (i.e., is "sticky").
+				var requestedStickiness = item.attr( 'data-sticky' );
+				var stickiness = 'true';
+				if ( requestedStickiness && 0 < requestedStickiness.length ) {
+					stickiness = requestedStickiness;
+				}
+
+				abCookieValue = '';
+				abCookie = '';
+				abCookies = [];
+
+				// Get the value stored in the cookie for this module/experiment if we are persisting this (if any value has been set).
+				if ( 'true' === stickiness || stickiness ) {
+					cookies = document.cookie.split( ';' );
+					abCookies = cookies.filter( function( cookieItem ) {
+						return -1 < cookieItem.indexOf( 'CDC_ABTest_' + testId + '_' + value );
+					} );
+
+					if ( 0 < abCookies.length ) {
+						abCookie = abCookies[ 0 ].split( '=' );
+						if ( 0 < abCookie.length ) {
+							abCookieValue = abCookie[ 1 ];
+						}
+					}
+
+				}
+
+				if ( '' !== abCookieValue && ( stickiness || 'true' === stickiness ) ) {
+					item.attr( 'data-abid', abId );
+					item.attr( 'data-ab-show', abCookieValue );
+					dfdAjax.resolve( abCookieValue );
+				} else if ( '' === abCookieValue ) {
+					// We don't have a cookie value so we need to hit the API to figure out whether to serve up the baseline or variant.
+					$.ajax( {
+						url: apiEndpoint + experimentId + '&s=' + requestedPercent,
+						success: function( result ) {
+							var item = $( 'div[data-abid="' + value + '"]' );
+							if ( 1 === JSON.parse( result ).variant ) {
+								$( item ).attr( 'data-ab-show', 'variant' );
+							} else {
+								$( item ).attr( 'data-ab-show', 'baseline' );
+							}
+							dfdAjax.resolve( JSON.parse( result ).variant );
+						}
+					} );
+				}
+
+				return dfdAjax.promise();
+			};
+
+			// This would be a user function that makes an ajax request.
+			// In normal code you'd be using $.ajax instead of simulateAjax.
+			var requestAjax = function( value ) {
+				return callApi( value );
+			};
+
+			// Deferred pipe chaining.
+			// What you want to note here is that an new
+			// ajax call will not start until the previous
+			// ajax call is completely finished.
+			for ( var x = 0; x < count; x++ ) {
+
+				var item = $( modules[ x ] );
+				values.push( item.attr( 'data-abid' ) );
+
+				dfdNext = dfdNext.pipe( function() {
+					var value = values.shift();
+					return requestAjax( value ).
+						done( function( response ) {
+							// Process the response here if needed.
+						} );
+				} );
+
+			}
+			dfdNext = dfdNext.pipe( function() {
+				var cdcAbDivs = $( 'div[data-abid]' );
+				$.each( cdcAbDivs, function( index, elem ) {
+
+					var cdcAbDiv = $( elem );
+					if ( overrideVariant && 0 < overrideVariant.length ) {
+						var overrides = overrideVariant[ 0 ].split( ',' );
+						var override = 'false';
+						if ( index < overrides.length ) {
+							override = overrides[ index ];
+						}
+						if ( 'true' === override ) {
+							cdcAbDiv.attr( 'data-ab-show', 'variant' );
+						} else {
+							cdcAbDiv.attr( 'data-ab-show', 'baseline' );
+						}
+					}
+
+					var variantContentId = cdcAbDiv.attr( 'id' );
+					var selector = cdcAbDiv.attr( 'data-selector' );
+					if ( 'variant' === cdcAbDiv.attr( 'data-ab-show' ) ) {
+						var block = $( '#' + variantContentId ).contents();
+						var repl = $( '<div />' );
+						for ( var i = 0; i < block.length; i++ ) {
+							if ( 8 === block[ i ].nodeType ) {
+								repl = $( block[ i ].nodeValue );
+								break;
+							}
+						}
+						repl.attr( 'id', variantContentId );
+						repl.attr( 'data-ab-show', 'variant' );
+						repl.attr( 'data-abid', cdcAbDiv.attr( 'data-abid' ) );
+						repl.attr( 'data-selector', '#' + variantContentId );
+						var externalLinks = [];
+						$( selector ).find( 'a[class*="tp-link-policy"]' ).each( function( anchorIndex, anchorElem ) {
+							externalLinks.push( $( anchorElem ).attr( 'href' ) );
+						} );
+						// Remove the element that had the variant markup used to construct the new variant element.
+						$( '#' + variantContentId ).remove();
+						// Replace the baseline markup with the new variant element.
+						$( selector ).replaceWith( repl );
+						for ( var externalLinksIndex = 0; externalLinksIndex < externalLinks.length; externalLinksIndex++ ) {
+							$( repl ).find( 'a[href="' + externalLinks[ externalLinksIndex ] + '"]' ).addClass( 'tp-link-policy' )
+								.append( $( '<span class="sr-only">external icon</span><span class="fi cdc-icon-external x16 fill-external" aria-hidden="true"></span>' ) );
+						}
+						// Set the selector to be the ID reference to the now displayed variant element (only used in highlighting logic below).
+						selector = '#' + variantContentId;
+						// Set the cookie.
+						document.cookie = 'CDC_ABTest_' + testId + '_' + cdcAbDiv.attr( 'data-abid' ) + '=variant; expires=' + expDate.toGMTString() + '; path=/; secure';
+					} else {
+						$( selector ).attr( 'data-abid', cdcAbDiv.attr( 'data-abid' ) );
+						$( selector ).attr( 'data-ab-show', 'baseline' );
+						document.cookie = 'CDC_ABTest_' + testId + '_' + cdcAbDiv.attr( 'data-abid' ) + '=baseline; expires=' + expDate.toGMTString() + '; path=/; secure';
+						cdcAbDiv.remove();
+					}
+
+					if ( highlight ) {
+						$( '*[data-abid]' ).attr( 'style', 'border: 4px solid rgb(201, 34, 34)!important; padding: 4px!important' );
+					}
+				} );
+
+				// Fire the page view when Adobe Launch is loaded/available
+				var attempts = 0;
+				var interval = setInterval( function() {
+
+					var root = document.getElementsByTagName( 'body' )[ 0 ];
+					if ( 0 > root.className.indexOf( 'adobe-launch-complete' ) ) {
+						attempts++;
+					} else {
+						clearInterval( interval );
+
+						// Set the click handlers for the module(s) in the A/B test
+						$( '[data-abid]' ).each( function( divIndex, divElem ) {
+							var parentAbDiv = $( divElem );
+							var anchorCount = 0;
+							var abAnchorCount = 0;
+							var anchors = [];
+							if ( parentAbDiv.is( 'a' ) ) {
+								anchors.push( parentAbDiv );
+								anchorCount = 1;
+								abAnchorCount = 0;
+							} else {
+								anchorCount = $( parentAbDiv ).find( 'a' ).length;
+								abAnchorCount = $( parentAbDiv ).find( 'a.ab-track-link' ).length;
+								anchors = parentAbDiv.find( 'a' );
+							}
+							$( anchors ).each( function( anchorIndex, elem ) {
+								var abAnchor = $( elem );
+								if ( ! abAnchor.hasClass( 'tp-link-policy' ) ) {
+									abAnchor.on( 'click', function( e ) {
+										e.stopImmediatePropagation();
+										e.preventDefault();
+										var tag = $( this );
+										var trackLink = false;
+										if ( ( 1 < anchorCount && 0 === abAnchorCount ) || ( 1 === anchorCount && 0 === abAnchorCount ) ) {
+											trackLink = true;
+										} else if ( tag.is( 'a' ) ) {
+											trackLink = tag.hasClass( 'ab-track-link' );
+										} else if ( 1 === tag.children( 'a' ).length ) {
+											trackLink = tag.children( 'a' ).hasClass( 'ab-track-link' );
+										}
+										if ( trackLink ) {
+											s.pageName = null;
+											s.prop64 = testId;
+											s.events = 'event2';
+											s.eVar8 = parentAbDiv.attr( 'data-abid' ) + '_' + parentAbDiv.attr( 'data-ab-show' );
+											s.linkTrackEvents = 'event2';
+											s.linkTrackVars = 'prop2,prop31,prop46,prop18,prop64,pageName,event2,eVar8';
+											s.tl( true, 'o', tag.attr( 'href' ) );
+										}
+										if ( tag.is( 'a' ) ) {
+											setTimeout( function( url ) {
+												window.location = url;
+											}, 200, tag.attr( 'href' ) );
+										} else if ( 1 === tag.children( 'a' ).length ) {
+											setTimeout( function( url ) {
+												window.location = url;
+											}, 200, tag.children( 'a' ).attr( 'href' ) );
+										}
+										return false;
+									} );
+								}
+							} );
+						} );
+
+						s.prop64 = testId;
+						s.eVar8 = cdcAbDivs.map( function() {
+							abId = $( this ).attr( 'data-abid' );
+							var abOption = $( this ).attr( 'data-ab-show' );
+							var id = $( this ).attr( 'id' );
+							if ( 'undefined' === typeof abOption || '' === abOption ) {
+								if ( 'undefined' === typeof id || '' === id ) {
+									abOption = 'not_set';
+								} else {
+									abOption = 'baseline';
+								}
+							}
+							return abId + '_' + abOption;
+						} ).get().join( ';' );
+
+						s.t();
+					}
+					if ( 20 < attempts ) {
+						clearInterval( interval );
+						console.log( 'Adobe Launch failed to load after 20 attempts' );
+					}
+
+				}, 500 );
+
+				document.documentElement.className = document.documentElement.className.replace( RegExp( ' ?d-none' ), '' );
+
+				return callback();
+			} );
+
+			// Start the pipe chain.
+			dfd.resolve();
+
+		};
+
+		var findTp4Viewport = function() {
+			var result = '';
+			var envs = [ 'xs', 'sm', 'md', 'lg', 'xl', 'xxl' ];
+			var el = $( '<div />' );
+			el.appendTo( $( 'body' ) );
+			for ( var i = envs.length - 1; 0 <= i; i-- ) {
+				var env = envs[ i ];
+				el.addClass( 'd-' + env + '-none' );
+				if ( 'none' === el.css( 'display' ) ) {
+					el.remove();
+					result = env;
+					break;
+				}
+			}
+			return result;
+		};
+
+		//
+		// Check to see if the test is restricted to certain viewports and, if so, check to see if the current viewport is in the ones specified for the test.
+		//
+		var currentViewport = findTp4Viewport();
+		if ( testActive ) {
+			if ( testViewports && 0 < testViewports.length && '' !== currentViewport ) {
+				testActive = -1 < $.inArray( currentViewport, testViewports );
+			}
+		}
+
+		//
+		// Check to see what type of test is being requested and run the test(s).
+		//
+		if ( testActive ) {
+			if ( CDC.ABTest.TEST_TYPE_REDIRECT === testType ) {
+				runRedirectTest();
+			} else {
+				runModuleTest();
+			}
+		} else {
+			// No active test.  Just re-enable the page display.
+			document.documentElement.className = document.documentElement.className.replace( RegExp( ' ?d-none' ), '' );
+		}
+
+	}
+
+} )( window );

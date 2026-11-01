@@ -1,0 +1,204 @@
+{
+  "audit_timestamp_utc": "2026-11-01T15:59:04.218239+00:00",
+  "audit_script": "C:\\Users\\imksa\\Desktop\\Research Works\\cardiovascular-ml-research\\scripts\\audit_brfss_provenance.py",
+  "audit_status": "PASS_WITH_DOCUMENTED_LIMITATIONS",
+  "audit_scope": "Read-only source-file integrity, respondent counts, schema, predictor/outcome/design fields, CDC layout comparison and provenance-record comparison.",
+  "git": {
+    "commit": "87fb76929c3802fde0f104b164aec336938dc933",
+    "branch": "phase/03-data-provenance-audit",
+    "working_tree_clean": false
+  },
+  "cdc_2025_layout": {
+    "path": "C:\\Users\\imksa\\Desktop\\Research Works\\cardiovascular-ml-research\\docs\\references\\cdc\\llcp_varlayout_25_onecolumn.html",
+    "sha256": "472bdc94c7e55928cdf312fcc354066424953a4646f9ccde6b94a7f84e8ddc11",
+    "variable_count": 283
+  },
+  "datasets": [
+    {
+      "survey_year": 2023,
+      "filename": "LLCP2023.XPT",
+      "resolved_path": "C:\\Users\\imksa\\Desktop\\Research Works\\cardiovascular-ml-research\\data\\raw\\brfss\\2023\\LLCP2023.XPT",
+      "file_size_bytes": 1205554400,
+      "sha256": "3d3bf8ef5195bde227828ddc4c90745b76e8b304f8f5b9a043b6d99895fd1615",
+      "respondent_count": 433323,
+      "variable_count": 350,
+      "duplicate_variable_names": [],
+      "cdc_published_respondent_count": 433323,
+      "respondent_count_matches_cdc": true,
+      "cdc_summary_variable_count": 350,
+      "variable_count_matches_cdc_summary": true,
+      "cdc_layout_variable_count": null,
+      "cdc_layout_exact_match": null,
+      "cdc_layout_missing_from_local": [],
+      "local_variables_not_in_cdc_layout": [],
+      "predictor_variables_present": [
+        "_AGEG5YR",
+        "EXERANY2",
+        "_SMOKER3",
+        "BPHIGH6",
+        "DIABETE4",
+        "_BMI5"
+      ],
+      "predictor_variables_missing": [],
+      "outcome_variables_present": [
+        "_MICHD",
+        "CVDINFR4",
+        "CVDCRHD4"
+      ],
+      "outcome_variables_missing": [],
+      "design_variables_present": [
+        "_LLCPWT",
+        "_STSTR",
+        "_PSU"
+      ],
+      "design_variables_missing": [],
+      "locked_predictor_compatible": true,
+      "provenance_size_match": true,
+      "provenance_sha256_match": true,
+      "variable_labels": {
+        "_AGEG5YR": "REPORTED AGE IN FIVE-YEAR AGE CATEGORIES",
+        "EXERANY2": "EXERCISE IN PAST 30 DAYS",
+        "_SMOKER3": "COMPUTED SMOKING STATUS",
+        "BPHIGH6": "EVER TOLD BLOOD PRESSURE HIGH",
+        "DIABETE4": "(EVER TOLD) YOU HAD DIABETES",
+        "_BMI5": "COMPUTED BODY MASS INDEX",
+        "_MICHD": "RESPONDENTS THAT HAVE EVER REPORTED HAVI",
+        "CVDINFR4": "EVER DIAGNOSED WITH HEART ATTACK",
+        "CVDCRHD4": "EVER DIAGNOSED WITH ANGINA OR CORONARY H",
+        "_LLCPWT": "FINAL WEIGHT: LAND-LINE AND CELL-PHONE D",
+        "_STSTR": "SAMPLE DESIGN STRATIFICATION VARIABLE",
+        "_PSU": "PRIMARY SAMPLING UNIT"
+      },
+      "cdc_reference_url": "https://www.cdc.gov/brfss/annual_data/annual_2023.html",
+      "metadata_encoding": "latin1",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "survey_year": 2024,
+      "filename": "LLCP2024.XPT",
+      "resolved_path": "C:\\Users\\imksa\\Desktop\\Research Works\\cardiovascular-ml-research\\data\\raw\\brfss\\2024\\LLCP2024.XPT",
+      "file_size_bytes": 1093874240,
+      "sha256": "7d53cf088f858e02bcc029a51cf0408cc68f40a0ebeb02a3c0f73058aab36b1c",
+      "respondent_count": 457670,
+      "variable_count": 301,
+      "duplicate_variable_names": [],
+      "cdc_published_respondent_count": 457670,
+      "respondent_count_matches_cdc": true,
+      "cdc_summary_variable_count": 301,
+      "variable_count_matches_cdc_summary": true,
+      "cdc_layout_variable_count": null,
+      "cdc_layout_exact_match": null,
+      "cdc_layout_missing_from_local": [],
+      "local_variables_not_in_cdc_layout": [],
+      "predictor_variables_present": [
+        "_AGEG5YR",
+        "EXERANY2",
+        "_SMOKER3",
+        "DIABETE4",
+        "_BMI5"
+      ],
+      "predictor_variables_missing": [
+        "BPHIGH6"
+      ],
+      "outcome_variables_present": [
+        "_MICHD",
+        "CVDINFR4",
+        "CVDCRHD4"
+      ],
+      "outcome_variables_missing": [],
+      "design_variables_present": [
+        "_LLCPWT",
+        "_STSTR",
+        "_PSU"
+      ],
+      "design_variables_missing": [],
+      "locked_predictor_compatible": false,
+      "provenance_size_match": true,
+      "provenance_sha256_match": true,
+      "variable_labels": {
+        "_AGEG5YR": "REPORTED AGE IN FIVE-YEAR AGE CATEGORIES",
+        "EXERANY2": "EXERCISE IN PAST 30 DAYS",
+        "_SMOKER3": "COMPUTED SMOKING STATUS",
+        "DIABETE4": "(EVER TOLD) YOU HAD DIABETES",
+        "_BMI5": "COMPUTED BODY MASS INDEX",
+        "_MICHD": "RESPONDENTS THAT HAVE EVER REPORTED HAVI",
+        "CVDINFR4": "EVER DIAGNOSED WITH HEART ATTACK",
+        "CVDCRHD4": "EVER DIAGNOSED WITH ANGINA OR CORONARY H",
+        "_LLCPWT": "FINAL WEIGHT: LAND-LINE AND CELL-PHONE D",
+        "_STSTR": "SAMPLE DESIGN STRATIFICATION VARIABLE",
+        "_PSU": "PRIMARY SAMPLING UNIT"
+      },
+      "cdc_reference_url": "https://www.cdc.gov/brfss/annual_data/annual_2024.html",
+      "metadata_encoding": "latin1",
+      "status": "COMPATIBILITY_AUDIT_ONLY",
+      "failures": []
+    },
+    {
+      "survey_year": 2025,
+      "filename": "LLCP2025.XPT",
+      "resolved_path": "C:\\Users\\imksa\\Desktop\\Research Works\\cardiovascular-ml-research\\data\\raw\\brfss\\2025\\LLCP2025.XPT",
+      "file_size_bytes": 799971280,
+      "sha256": "d99262f8854f018a600c3538ee78e4308569af700abe6b92b36180336c24dec2",
+      "respondent_count": 356158,
+      "variable_count": 283,
+      "duplicate_variable_names": [],
+      "cdc_published_respondent_count": 356158,
+      "respondent_count_matches_cdc": true,
+      "cdc_summary_variable_count": 284,
+      "variable_count_matches_cdc_summary": false,
+      "cdc_layout_variable_count": 283,
+      "cdc_layout_exact_match": true,
+      "cdc_layout_missing_from_local": [],
+      "local_variables_not_in_cdc_layout": [],
+      "predictor_variables_present": [
+        "_AGEG5YR",
+        "EXERANY2",
+        "_SMOKER3",
+        "BPHIGH6",
+        "DIABETE4",
+        "_BMI5"
+      ],
+      "predictor_variables_missing": [],
+      "outcome_variables_present": [
+        "_MICHD",
+        "CVDINFR4",
+        "CVDCRHD4"
+      ],
+      "outcome_variables_missing": [],
+      "design_variables_present": [
+        "_LLCPWT",
+        "_STSTR",
+        "_PSU"
+      ],
+      "design_variables_missing": [],
+      "locked_predictor_compatible": true,
+      "provenance_size_match": true,
+      "provenance_sha256_match": true,
+      "variable_labels": {
+        "_AGEG5YR": "REPORTED AGE IN FIVE-YEAR AGE CATEGORIES",
+        "EXERANY2": "EXERCISE IN PAST 30 DAYS",
+        "_SMOKER3": "COMPUTED SMOKING STATUS",
+        "BPHIGH6": "EVER TOLD BLOOD PRESSURE HIGH",
+        "DIABETE4": "(EVER TOLD) YOU HAD DIABETES",
+        "_BMI5": "COMPUTED BODY MASS INDEX",
+        "_MICHD": "RESPONDENTS THAT HAVE EVER REPORTED HAVI",
+        "CVDINFR4": "EVER DIAGNOSED WITH HEART ATTACK",
+        "CVDCRHD4": "EVER DIAGNOSED WITH ANGINA OR CORONARY H",
+        "_LLCPWT": "FINAL WEIGHT: LAND-LINE AND CELL-PHONE D",
+        "_STSTR": "SAMPLE DESIGN STRATIFICATION VARIABLE",
+        "_PSU": "PRIMARY SAMPLING UNIT"
+      },
+      "cdc_reference_url": "https://www.cdc.gov/brfss/annual_data/annual_2025.html",
+      "metadata_encoding": "latin1",
+      "status": "PASS_WITH_DOCUMENTED_COUNT_DISCREPANCY",
+      "failures": []
+    }
+  ],
+  "known_limitations": [
+    "2024 is a compatibility audit only: BPHIGH6 is absent, so the locked six-predictor model cannot be evaluated on 2024.",
+    "The 2025 CDC annual summary reports 284 variables, while the archived detailed layout and matching local XPT contain 283 variable names. Both counts are retained as a documented source discrepancy.",
+    "The 2025 local XPT matches the archived detailed CDC layout by variable name; this is a schema comparison, not independent proof of the original download transaction."
+  ],
+  "failures": []
+}

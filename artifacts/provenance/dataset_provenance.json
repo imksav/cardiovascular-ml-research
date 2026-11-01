@@ -8,6 +8,14 @@
     "provenance_recorded_utc": "2026-10-09T02:05:14.819980+00:00"
   },
   {
+    "survey_year": 2024,
+    "filename": "LLCP2024.XPT",
+    "resolved_path": "C:\\Users\\imksa\\Desktop\\Research Works\\cardiovascular-ml-research\\data\\raw\\brfss\\2024\\LLCP2024.XPT",
+    "file_size_bytes": 1093874240,
+    "sha256": "7d53cf088f858e02bcc029a51cf0408cc68f40a0ebeb02a3c0f73058aab36b1c",
+    "provenance_recorded_utc": "2026-11-01T14:56:33.501437+00:00"
+  },
+  {
     "survey_year": 2025,
     "filename": "LLCP2025.XPT",
     "resolved_path": "C:\\Users\\imksa\\Desktop\\Research Works\\cardiovascular-ml-research\\data\\raw\\brfss\\2025\\LLCP2025.XPT",

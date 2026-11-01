@@ -1,0 +1,4 @@
+﻿survey_year,filename,file_size_bytes,sha256,respondent_count,variable_count,cdc_published_respondent_count,respondent_count_matches_cdc,cdc_summary_variable_count,variable_count_matches_cdc_summary,cdc_layout_variable_count,cdc_layout_exact_match,predictor_variables_missing,outcome_variables_missing,design_variables_missing,locked_predictor_compatible,provenance_size_match,provenance_sha256_match,status,failures
+2023,LLCP2023.XPT,1205554400,3d3bf8ef5195bde227828ddc4c90745b76e8b304f8f5b9a043b6d99895fd1615,433323,350,433323,True,350,True,,,[],[],[],True,True,True,PASS,[]
+2024,LLCP2024.XPT,1093874240,7d53cf088f858e02bcc029a51cf0408cc68f40a0ebeb02a3c0f73058aab36b1c,457670,301,457670,True,301,True,,,"[""BPHIGH6""]",[],[],False,True,True,COMPATIBILITY_AUDIT_ONLY,[]
+2025,LLCP2025.XPT,799971280,d99262f8854f018a600c3538ee78e4308569af700abe6b92b36180336c24dec2,356158,283,356158,True,284,False,283,True,[],[],[],True,True,True,PASS_WITH_DOCUMENTED_COUNT_DISCREPANCY,[]

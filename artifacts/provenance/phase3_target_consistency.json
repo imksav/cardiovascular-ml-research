@@ -1,0 +1,41 @@
+[
+  {
+    "survey_year": 2023,
+    "status": "CONSISTENT_WITH_CDC_FORMULA",
+    "rows_checked": 433323,
+    "rows_with_defined_expected_value": 428738,
+    "rows_expected_missing": 4585,
+    "observed_target_missing_rows": 4585,
+    "mismatch_count": 0,
+    "mismatch_examples": [],
+    "formula": "1 if CVDINFR4 == 1 or CVDCRHD4 == 1; 2 if CVDINFR4 == 2 and CVDCRHD4 == 2; missing otherwise.",
+    "verification_basis": "CDC calculated-variable documentation. XPT value labels were not used because they were not exposed in the source metadata.",
+    "cdc_documentation_url": "https://www.cdc.gov/brfss/annual_data/2023/pdf/2023-calculated-variables-version4-508.pdf"
+  },
+  {
+    "survey_year": 2024,
+    "status": "CONSISTENT_WITH_CDC_FORMULA",
+    "rows_checked": 457670,
+    "rows_with_defined_expected_value": 452464,
+    "rows_expected_missing": 5206,
+    "observed_target_missing_rows": 5206,
+    "mismatch_count": 0,
+    "mismatch_examples": [],
+    "formula": "1 if CVDINFR4 == 1 or CVDCRHD4 == 1; 2 if CVDINFR4 == 2 and CVDCRHD4 == 2; missing otherwise.",
+    "verification_basis": "CDC calculated-variable documentation. XPT value labels were not used because they were not exposed in the source metadata.",
+    "cdc_documentation_url": "https://www.cdc.gov/brfss/annual_data/2024/pdf/2024-calculated-variables-version4-508.pdf"
+  },
+  {
+    "survey_year": 2025,
+    "status": "CONSISTENT_WITH_CDC_FORMULA",
+    "rows_checked": 356158,
+    "rows_with_defined_expected_value": 352145,
+    "rows_expected_missing": 4013,
+    "observed_target_missing_rows": 4013,
+    "mismatch_count": 0,
+    "mismatch_examples": [],
+    "formula": "1 if CVDINFR4 == 1 or CVDCRHD4 == 1; 2 if CVDINFR4 == 2 and CVDCRHD4 == 2; missing otherwise.",
+    "verification_basis": "CDC calculated-variable documentation. XPT value labels were not used because they were not exposed in the source metadata.",
+    "cdc_documentation_url": "https://www.cdc.gov/brfss/annual_data/2025/pdf/2025-calculated-variables-version4-508.pdf"
+  }
+]

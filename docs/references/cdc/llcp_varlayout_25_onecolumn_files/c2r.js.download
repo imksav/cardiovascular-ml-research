@@ -1,0 +1,76 @@
+import { createC2pa } from '/TemplatePackage/contrib/libs/c2pa/latest/c2pa.esm.min.js';
+
+(async () => {
+	const ROOT = String(window.CDC?.tpPath || '').trim();
+	const c2pa = await createC2pa({
+		wasmSrc: `${ROOT}/TemplatePackage/contrib/libs/c2pa/latest/toolkit_bg.wasm`,
+		workerSrc: `${ROOT}/TemplatePackage/contrib/libs/c2pa/latest/c2pa.worker.min.js`,
+	});
+
+	const DEBUG = !!window.location?.search?.includes('cdcdebug');
+	const manifests = {};
+
+	// expose as recallable method
+	window.cdcc2paCheck = () => {
+		Array.from(document.getElementsByTagName('img')).forEach(async (image) => {
+			// skip images in page headers, footers, or non-indexed content, or images already checked
+			if (image?.closest('header, footer, .noindex, #hero-carousel')) {
+				return;
+			}
+			// skip some extensions
+			if (!image.src || image.src.match(/\.(svg|axd|gif|bmp)([#\?]|$)/i)) {
+				return;
+			}
+
+			let manifestStore = null;
+			if (manifests.hasOwnProperty(image.src)) {
+				manifestStore = manifests[image.src];
+			} else {
+				// Get a manifest store for the image
+				try {
+					let manifest = await c2pa.read(image);
+					manifestStore = manifest.manifestStore;
+				} catch (e) {
+					DEBUG && console.error(`C2R: failed checking image:`, image, e);
+					return;
+				}
+				manifests[image.src] = manifestStore
+			}
+			const manifestFlat = JSON.stringify(manifestStore?.activeManifest?.assertions?.data || {});
+			const manifestCheck = manifestFlat.includes('cv.iptc.org/newscodes/digitalsourcetype/compositeWithTrainedAlgorithmicMedia') ||
+				manifestFlat.includes('cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia');
+
+			DEBUG && console.info(`C2R: ${manifestCheck?'Y':'n'}`, image, manifestStore);
+			if (manifestStore && manifestCheck) {
+				const details = {
+					generator: String(manifestStore.activeManifest?.claimGenerator || ''),
+					tools: [],
+					issuer: '',
+					date: '',
+				};
+				if (Array.isArray(manifestStore.activeManifest?.assertions?.data)) {
+					manifestStore.activeManifest.assertions.data.forEach((assertion) => {
+						let assertionData = assertion?.data;
+						if (assertionData) {
+							assertionData.actions.forEach((action) => {
+								if (action.digitalSourceType.includes('cv.iptc.org/newscodes/digitalsourcetype/compositeWithTrainedAlgorithmicMedia') ||
+									action.digitalSourceType.includes('cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia')) {
+									details.tools.push(action?.softwareAgent);
+								}
+							});
+						}
+					});
+				}
+				details.issuer = String(manifestStore.activeManifest?.signatureInfo?.issuer || '');
+				details.date   = String(manifestStore.activeManifest?.signatureInfo?.time || '');
+				// dispatch event and flag to avoid retriggering
+				image.dispatchEvent(new CustomEvent('cdc-image-c2r', { detail: details, bubbles: true }));
+			}
+		});
+	}
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', window.cdcc2paCheck);
+	} else {
+		window.cdcc2paCheck();
+	}
+})();
